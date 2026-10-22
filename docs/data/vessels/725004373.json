@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"725004373","nombre":"COMPAS MARS 1","puntos":[[1792678880,-68.400158,-54.89357,8.6,86.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T14:27:01Z","fecha_minima_utc":"2026-10-07T14:27:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"725004373","nombre":"COMPAS MARS 1","puntos":[[1792679280,-68.373193,-54.8925,8.6,86.1]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T14:28:01Z","fecha_minima_utc":"2026-10-07T14:28:01Z"}
