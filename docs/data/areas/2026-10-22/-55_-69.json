@@ -1,1 +1,1 @@
-{"schema":"ais-mag-area-tile-v2","dia_utc":"2026-10-22","celda_1_grado":"-55_-69","puntos":[["725017800",1792630699,-68.400807,-54.941595,9.7,147.2]],"campos":["mmsi","timestamp_unix","lon","lat","sog","cog"],"muestra_min":15}
+{"schema":"ais-mag-area-tile-v2","dia_utc":"2026-10-22","celda_1_grado":"-55_-69","puntos":[["725017800",1792630767,-68.398213,-54.943833,9.7,143.7]],"campos":["mmsi","timestamp_unix","lon","lat","sog","cog"],"muestra_min":15}
