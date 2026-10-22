@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"725005128","nombre":"FRIOSUR XI","puntos":[[1792664708,-72.961168,-45.431885,10.3,119.4]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T10:27:01Z","fecha_minima_utc":"2026-10-07T10:27:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"725005128","nombre":"FRIOSUR XI","puntos":[[1792664708,-72.961168,-45.431885,10.3,119.4]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T10:28:01Z","fecha_minima_utc":"2026-10-07T10:28:01Z"}
