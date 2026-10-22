@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"701006806","nombre":"FRANCESCO3","puntos":[[1792672624,-68.286373,-54.816313,14.9,146.3]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T12:49:01Z","fecha_minima_utc":"2026-10-07T12:49:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"701006806","nombre":"FRANCESCO3","puntos":[[1792672624,-68.286373,-54.816313,14.9,146.3]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T12:50:01Z","fecha_minima_utc":"2026-10-07T12:50:01Z"}
