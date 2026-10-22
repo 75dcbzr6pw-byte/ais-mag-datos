@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIS-MAG · Capacidad logística · Vista estática</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+<style>
+html,body,#map{height:100%;margin:0;font:14px system-ui,Arial,sans-serif}#map{background:#e5f2fa}
+.panel{position:absolute;z-index:999;right:12px;top:12px;background:rgba(28,36,47,.94);border:1px solid #697482;color:white;border-radius:16px;padding:15px;max-width:330px;box-shadow:0 6px 22px #0004}
+h1{font-size:16px;margin:0 0 10px}p{font-size:12px;line-height:1.5;color:#dae2ed}button{border-radius:9px;border:1px solid #828d9c;color:white;background:#344257;padding:9px 11px;cursor:pointer;margin:3px}button:disabled{opacity:.5;cursor:wait}button:hover:not(:disabled){background:#496077}.box{margin-top:10px;padding:8px;background:#263241;border-radius:7px;word-break:break-word;font-size:12px;line-height:1.5}#status{color:#c9d6e3}
+@media(max-width:620px){.panel{left:8px;right:8px;max-width:none;padding:9px}.panel p{display:none}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<aside class="panel">
+<h1>⚓ AIS-MAG · Capacidad logística</h1>
+<div><button id="reload">Actualizar posiciones</button><button id="area">Seleccionar área</button><button id="clear">Limpiar historial</button></div>
+<p>Al abrir se descarga exclusivamente la última posición publicada de cada embarcación. Para consultar 15 días de historial, selecciona una nave o dibuja un rectángulo de hasta 2° por lado, usando dos clics en el mapa.</p>
+<div class="box" id="status">Preparando visualizador...</div>
+</aside>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script type="module">
+import {aisMagPages} from './integration/consumidor_mapa_acs_pages.js';
+const client=aisMagPages(new URL('.',location.href).href);
+const map=L.map('map',{zoomControl:true}).setView([-53.0,-72.8],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+const markers=L.featureGroup().addTo(map), history=L.featureGroup().addTo(map);
+const status=document.getElementById('status');let drawing=false,corners=[];
+function format(iso){return iso ? new Date(iso).toLocaleString('es-CL',{timeZone:'America/Punta_Arenas'})+' (Magallanes)' : 'sin registro'}
+function stat(t){status.textContent=t}
+function drawPaths(paths){for(const line of paths){if(line.length>=2)L.polyline(line.map(p=>[p[1],p[0]]),{color:'#e76b28',weight:2.6,opacity:.83}).addTo(history)}}
+async function showVessel(mmsi){
+  stat('Descargando historial de la nave '+mmsi+'...');history.clearLayers();
+  try {const h=await client.getVesselHistory(mmsi);drawPaths(h.trayectos);
+    const ps=h.puntos;if(ps.length)map.fitBounds(L.latLngBounds(ps.map(p=>[p[2],p[1]])),{padding:[35,35]});
+    stat('MMSI '+mmsi+' · '+ps.length+' observaciones históricas · '+h.trayectos.length+' tramos observados · hasta 15 días');
+  }catch(err){stat('No fue posible consultar historial: '+err.message)}
+}
+async function refresh(){
+ stat('Descargando últimas posiciones...');markers.clearLayers();
+ try{const d=await client.getLatest();for(const feature of d.features){
+  const p=feature.properties,[lon,lat]=feature.geometry.coordinates;
+  const dot=L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:'#009a9f',fillOpacity:.9}).addTo(markers);
+  const content=document.createElement('div');
+  const title=document.createElement('strong');title.textContent=p.nombre||'Embarcación sin nombre';content.append(title);
+  const desc=document.createElement('div');desc.textContent=`MMSI ${p.mmsi} · ${p.velocidad_nudos??'?'} kn · rumbo ${p.rumbo_grados??'?'}°`;
+  const destino=document.createElement('div');if(p.destino_declarado)destino.textContent="Destino AIS declarado (no verificado): "+p.destino_declarado;
+  const when=document.createElement('div');when.textContent='Última recepción: '+format(p.ultima_recepcion_utc);
+  const btn=document.createElement('button');btn.textContent='Ver historial (15 días)';btn.style.color='#fff';btn.addEventListener('click',()=>showVessel(p.mmsi));
+  content.append(desc,destino,when,btn);dot.bindPopup(content);
+ }
+ stat(`${d.features.length} embarcaciones con última posición registrada · Publicado ${format(d.metadata.publicado_utc)} · Periodicidad: 3 horas. No es seguimiento en tiempo real.`);
+ }catch(err){stat('Sin datos publicados todavía o error de red: '+err.message)}
+}
+document.getElementById('reload').onclick=refresh;
+document.getElementById('clear').onclick=()=>{drawing=false;corners=[];history.clearLayers();stat('Historial limpiado. Se mantienen las últimas posiciones.')};
+document.getElementById('area').onclick=()=>{drawing=true;corners=[];history.clearLayers();stat('Selecciona dos esquinas del área en el mapa (máximo 2° × 2°).')};
+map.on('click',async ev=>{
+ if(!drawing)return;corners.push(ev.latlng);L.circleMarker(ev.latlng,{radius:5,color:'#ed8d00'}).addTo(history);
+ if(corners.length<2)return;
+ drawing=false;const a=corners[0],b=corners[1];let bbox=[Math.min(a.lng,b.lng),Math.min(a.lat,b.lat),Math.max(a.lng,b.lng),Math.max(a.lat,b.lat)];
+ L.rectangle([[bbox[1],bbox[0]],[bbox[3],bbox[2]]],{color:'#e76b28',weight:2}).addTo(history);
+ stat('Buscando embarcaciones en el área seleccionada...');
+ try{const area=await client.getAreaHistory(bbox,{days:15,onProgress:(n,total)=>stat(`Descargando datos históricos ${n}/${total} archivos...`)});
+ for(const v of area.embarcaciones)drawPaths(v.trayectos);
+ stat(`${area.cantidad_embarcaciones} embarcaciones fueron observadas en el área · ${area.cantidad_posiciones} posiciones · ${area.archivos_descargados} archivos cargados. No implica tránsito continuo entre mensajes.`);
+ }catch(err){stat('No fue posible consultar área: '+err.message)}
+});
+refresh();
+</script>
+</body>
+</html>
