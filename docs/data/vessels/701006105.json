@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"701006105","nombre":"GC189 PR GARCIA","puntos":[[1792638655,-68.302708,-54.809505,0.0,50.3]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T03:44:01Z","fecha_minima_utc":"2026-10-07T03:44:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"701006105","nombre":"GC189 PR GARCIA","puntos":[[1792638655,-68.302708,-54.809505,0.0,50.3]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-22T03:45:01Z","fecha_minima_utc":"2026-10-07T03:45:01Z"}
