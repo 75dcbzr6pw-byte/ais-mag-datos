@@ -1,77 +1,144 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AIS-MAG · Capacidad logística · Vista estática</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIS + VMS · Navegación observada del sur de Chile</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
 <style>
-html,body,#map{height:100%;margin:0;font:14px system-ui,Arial,sans-serif}#map{background:#e5f2fa}
-.panel{position:absolute;z-index:999;right:12px;top:12px;background:rgba(28,36,47,.94);border:1px solid #697482;color:white;border-radius:16px;padding:15px;max-width:330px;box-shadow:0 6px 22px #0004}
-h1{font-size:16px;margin:0 0 10px}p{font-size:12px;line-height:1.5;color:#dae2ed}button{border-radius:9px;border:1px solid #828d9c;color:white;background:#344257;padding:9px 11px;cursor:pointer;margin:3px}button:disabled{opacity:.5;cursor:wait}button:hover:not(:disabled){background:#496077}.box{margin-top:10px;padding:8px;background:#263241;border-radius:7px;word-break:break-word;font-size:12px;line-height:1.5}#status{color:#c9d6e3}
-@media(max-width:620px){.panel{left:8px;right:8px;max-width:none;padding:9px}.panel p{display:none}}
+*{box-sizing:border-box}html,body,#map{height:100%;margin:0;font:14px system-ui,sans-serif;color:#193546}#map{background:#e5f2fa}.panel{position:absolute;z-index:900;right:16px;top:16px;width:370px;max-height:calc(100% - 32px);overflow:auto;background:#fffffff5;border:1px solid #c8d8df;border-radius:14px;padding:18px;box-shadow:0 8px 36px #18384b24}h1{font-size:19px;margin:0 0 5px}h2{font-size:14px;margin:16px 0 8px}.eyebrow{color:#557285;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}.note{font-size:12px;color:#587080;line-height:1.5;margin:8px 0}.warning{padding:9px;background:#fff4d7;border-left:3px solid #cc8d20;border-radius:4px;font-size:12px;line-height:1.5}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}button,input,select{font:inherit;padding:8px;border-radius:6px;border:1px solid #c1d0d9;background:white;color:#193546}button{cursor:pointer;background:#edf5f7}button:hover{background:#dcecef}button:disabled{opacity:.5;cursor:wait}input[type=search],select{width:100%}label{font-size:12px}input[type=checkbox]{vertical-align:middle}.meta{font-size:12px;line-height:1.6;white-space:pre-line}.legend{font-size:11px;color:#496373;line-height:1.8}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}th,td{padding:7px 4px;text-align:left;border-bottom:1px solid #e5ecef;vertical-align:top}th{color:#647c89}tbody tr{cursor:pointer}tbody tr:hover{background:#edf5f7}.pager{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:8px}.detail{margin-top:9px;padding-top:9px;border-top:1px solid #d9e3e8;white-space:pre-line;font-size:12px;line-height:1.6}a{color:#17617f}.leaflet-popup-content{line-height:1.6;max-width:300px}.leaflet-popup-content button{margin-top:6px}.foot{font-size:10px;color:#647c89;margin-top:12px}@media(max-width:700px){.panel{top:auto;bottom:8px;left:8px;right:8px;width:auto;max-height:44vh;padding:12px}h1{font-size:16px}.note.intro{display:none}h2{margin-top:9px}}
 </style>
 </head>
 <body>
 <div id="map"></div>
 <aside class="panel">
-<h1>⚓ AIS-MAG · Capacidad logística</h1>
-<div><button id="reload">Actualizar posiciones</button><button id="area">Seleccionar área</button><button id="clear">Limpiar historial</button></div>
-<p>Al abrir se descarga exclusivamente la última posición publicada de cada embarcación. Para consultar 15 días de historial, selecciona una nave o dibuja un rectángulo de hasta 2° por lado, usando dos clics en el mapa.</p>
-<div class="box" id="status">Preparando visualizador...</div>
+ <div class="eyebrow">Visor de prueba independiente · v39 sin cambios</div>
+ <h1>AIS + VMS del sur de Chile</h1>
+ <p class="note intro">Los Lagos · Aysén · Magallanes. Últimas posiciones observadas y trayectorias históricas. Cajas operativas provisionales.</p>
+ <div class="warning">VMS de Sernapesca se publica con desfase. La fecha de una posición no es la fecha de descarga. Ningún punto representa por sí solo la posición actual.</div>
+ <div class="controls"><label><input type="checkbox" id="ais" checked> AISStream</label><label><input type="checkbox" id="vms" checked> Sernapesca VMS</label><button id="reload">Actualizar</button></div>
+ <div class="controls"><select id="region" aria-label="Región"><option value="">Tres regiones</option><option>Los Lagos</option><option value="Aysen">Aysén</option><option>Magallanes</option></select></div>
+ <div class="controls"><select id="fleet" aria-label="Flota"><option value="">Todas las flotas publicadas</option><option value="acuicultura">Acuicultura</option><option value="flota_transportadoras">Transportadoras</option><option value="flota_artesanal">Extractiva artesanal</option><option value="flota_industrial">Extractiva industrial</option></select><input type="search" id="search" placeholder="Nombre, distintivo o MMSI" aria-label="Buscar embarcación"></div>
+ <p class="legend"><span class="dot" style="background:#008f95"></span>AIS · <span class="dot" style="background:#cb7924"></span>Acuicultura · <span class="dot" style="background:#bf5360"></span>Industrial · <span class="dot" style="background:#765bc0"></span>Artesanal · <span class="dot" style="background:#b18e16"></span>Transportadoras</p>
+ <div id="status" class="meta" role="status">Cargando fuentes…</div>
+ <div class="controls"><button id="fit">Ver selección</button><button id="clear">Limpiar trayectoria</button><button id="area">Área AIS</button></div>
+ <div id="detail" class="detail">Selecciona una embarcación para descargar su historial. Las trayectorias no se descargan al abrir.</div>
+ <label><input type="checkbox" id="projection"> Extender rumbo 15 min desde el reporte (hipótesis)</label>
+ <h2>Embarcaciones observadas <span id="count"></span></h2>
+ <table><thead><tr><th>Nombre / identificador</th><th>Fuente</th><th>Fecha del dato</th></tr></thead><tbody id="rows"></tbody></table>
+ <div class="pager"><button id="prev">Anterior</button><span id="page"></span><button id="next">Siguiente</button></div>
+ <p class="foot">No se fusionan AIS y VMS por nombre. La flota corresponde al archivo de Sernapesca, no a una actividad inferida. Los tramos unen observaciones y no son rutas navegables ni predicciones.</p>
+ <p class="foot"><a href="https://www.sernapesca.cl/informacion-utilidad/posiciones-geograficas-del-sistema-de-posicionamiento-satelital/" target="_blank" rel="noopener">Fuente VMS: Sernapesca</a> · <a href="vms/manifest.json" target="_blank">Fechas y archivos importados</a></p>
 </aside>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script type="module">
 import {aisMagPages} from './integration/consumidor_mapa_acs_pages.js';
-const client=aisMagPages(new URL('.',location.href).href);
-const map=L.map('map',{zoomControl:true}).setView([-53.0,-72.8],6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
-const markers=L.featureGroup().addTo(map), history=L.featureGroup().addTo(map);
-const status=document.getElementById('status');let drawing=false,corners=[],refreshing=false;
-function format(iso){return iso ? new Date(iso).toLocaleString('es-CL',{timeZone:'America/Punta_Arenas',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'})+' (UTC−3, Magallanes)' : 'sin registro'}
-function age(iso){const minutes=Math.max(0,Math.floor((Date.now()-Date.parse(iso))/60000));if(!Number.isFinite(minutes))return 'sin registro';return minutes<60 ? minutes+' min' : Math.floor(minutes/60)+' h '+minutes%60+' min'}
-function interval(metadata){const minutes=metadata.periodicidad_publicacion_minutos??metadata.periodicidad_publicacion_horas*60;return Number.isFinite(minutes) ? (minutes<60 ? minutes+' min' : minutes/60+' h') : 'no informado'}
-function stat(t){status.textContent=t}
-function drawPaths(paths){for(const line of paths){if(line.length>=2)L.polyline(line.map(p=>[p[1],p[0]]),{color:'#e76b28',weight:2.6,opacity:.83}).addTo(history)}}
-async function showVessel(mmsi){
-  stat('Descargando historial de la nave '+mmsi+'...');history.clearLayers();
-  try {const h=await client.getVesselHistory(mmsi);drawPaths(h.trayectos);
-    const ps=h.puntos;if(ps.length)map.fitBounds(L.latLngBounds(ps.map(p=>[p[2],p[1]])),{padding:[35,35]});
-    stat('MMSI '+mmsi+' · '+ps.length+' observaciones históricas · '+h.trayectos.length+' tramos observados · hasta 15 días');
-  }catch(err){stat('No fue posible consultar historial: '+err.message)}
+const $=id=>document.getElementById(id), base=new URL('.',location.href), aisClient=aisMagPages(base.href);
+const map=L.map('map',{preferCanvas:true}).setView([-48.2,-73.1],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+const markers=L.featureGroup().addTo(map),track=L.featureGroup().addTo(map),projection=L.featureGroup().addTo(map);
+const boxes={'Los Lagos':[-44.1,-75.5,-40.1,-71.5],Aysen:[-49.2,-77,-43.5,-71],Magallanes:[-56.7,-77,-48.5,-66]};
+const fleetNames={acuicultura:'Acuicultura',flota_transportadoras:'Transportadoras',flota_artesanal:'Extractiva artesanal',flota_industrial:'Extractiva industrial'};
+const colors={acuicultura:'#cb7924',flota_transportadoras:'#b18e16',flota_artesanal:'#765bc0',flota_industrial:'#bf5360'};
+let all=[],filtered=[],page=0,busy=false,aisMeta=null,vmsMeta=null,vmsManifest=null,failures=[],selected=null,drawing=false,corners=[],historyDescription='';
+const age=iso=>{const n=Math.max(0,Math.floor((Date.now()-Date.parse(iso))/60000));return Number.isFinite(n)?(n<60?n+' min':Math.floor(n/60)+' h '+n%60+' min'):'sin registro'};
+const local=iso=>iso?new Date(iso).toLocaleString('es-CL',{timeZone:'America/Punta_Arenas',hourCycle:'h23'})+' UTC−3':'sin registro';
+const sourceDate=stamp=>stamp?stamp.replace('T',' ')+' · huso no indicado':'sin registro';
+const number=(x,unit='')=>x===null||x===undefined?'sin dato':x+unit;
+function rowDate(v){return v.source==='AIS'?local(v.p.ultima_recepcion_utc):sourceDate(v.p.fecha_posicion_fuente)}
+function identity(v){return v.source==='AIS'?'MMSI '+v.p.mmsi:'Distintivo '+(v.p.distintivo||'sin dato')}
+function color(v){return v.source==='AIS'?'#008f95':colors[v.p.flotas?.[0]]||'#777'}
+function label(v){return v.p.nombre||'Sin nombre'}
+async function json(path){const r=await fetch(new URL(path,base),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+function describeSources(){
+ let text=filtered.length+' registros visibles (AIS y VMS no conciliados).';
+ if(aisMeta){const newest=all.filter(v=>v.source==='AIS').map(v=>v.p.ultima_recepcion_utc).filter(Boolean).sort().at(-1);text+='\nAIS: lote '+local(aisMeta.publicado_utc)+'; último reporte '+local(newest)+(newest?' (hace '+age(newest)+')':'')+'.';}
+ if(vmsMeta){text+='\nVMS: último archivo '+vmsMeta.ultimo_reporte+'; importación '+local(vmsMeta.generado_utc)+'. Horas de posición sin huso informado.';if(vmsManifest?.archivos_pendientes_en_ventana)text+='\nRecuperación inicial: '+vmsManifest.archivos_pendientes_en_ventana+' archivos pendientes en la ventana.';}
+ if(failures.length)text+='\nFuentes no disponibles: '+failures.join('; ')+'.';
+ $('status').textContent=text;
+}
+function render(){
+ const region=$('region').value,fleet=$('fleet').value,search=$('search').value.trim().toLocaleUpperCase();
+ filtered=all.filter(v=>{
+  if(!$('ais').checked&&v.source==='AIS'||!$('vms').checked&&v.source==='VMS')return false;
+  if(fleet&&(v.source!=='VMS'||!v.p.flotas.includes(fleet)))return false;
+  if(region){const [s,w,n,e]=boxes[region],[lon,lat]=v.coords;if(!(s<=lat&&lat<=n&&w<=lon&&lon<=e))return false;}
+  return !search||[label(v),v.p.distintivo,v.p.mmsi].filter(Boolean).join(' ').toLocaleUpperCase().includes(search);
+ });
+ markers.clearLayers();
+ for(const v of filtered){
+  const [lon,lat]=v.coords,dot=L.circleMarker([lat,lon],{radius:5,color:'#fff',weight:1,fillColor:color(v),fillOpacity:.85}).addTo(markers);
+  const content=document.createElement('div');
+  const title=document.createElement('strong');title.textContent=label(v);content.append(title);
+  const lines=[v.source+' · '+identity(v),'Fecha del reporte: '+rowDate(v),'Velocidad en ese reporte: '+number(v.p.velocidad_nudos,' kn')+' · rumbo '+number(v.p.rumbo_grados,'°')];
+  if(v.source==='VMS')lines.push('Flotas: '+v.p.flotas.map(f=>fleetNames[f]||f).join(', '),'Archivo fuente: '+v.p.fecha_reporte);
+  else lines.push('Recibido hace '+age(v.p.ultima_recepcion_utc));
+  for(const text of lines){const line=document.createElement('div');line.textContent=text;content.append(line);}
+  const btn=document.createElement('button');btn.textContent='Ver trayectoria observada';btn.onclick=()=>showTrack(v);content.append(btn);dot.bindPopup(content);v.marker=dot;
+ }
+ const pages=Math.max(1,Math.ceil(filtered.length/50));page=Math.min(page,pages-1);$('rows').replaceChildren();
+ for(const v of filtered.slice(page*50,(page+1)*50)){
+  const tr=document.createElement('tr');
+  for(const text of [label(v)+' · '+identity(v),v.source,v.source==='AIS'?local(v.p.ultima_recepcion_utc):v.p.fecha_posicion_fuente.replace('T',' ')]){const td=document.createElement('td');td.textContent=text;tr.append(td);}
+  tr.onclick=()=>{map.setView([v.coords[1],v.coords[0]],Math.max(map.getZoom(),9));v.marker.openPopup();showTrack(v)};$('rows').append(tr);
+ }
+ $('count').textContent='('+filtered.length+')';$('page').textContent=(page+1)+' / '+pages;$('prev').disabled=page===0;$('next').disabled=page===pages-1;describeSources();
 }
 async function refresh(){
- if(refreshing)return;refreshing=true;
- stat('Descargando últimas posiciones publicadas...');
- try{const d=await client.getLatest();markers.clearLayers();for(const feature of d.features){
-  const p=feature.properties,[lon,lat]=feature.geometry.coordinates;
-  const dot=L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:'#009a9f',fillOpacity:.9}).addTo(markers);
-  const content=document.createElement('div');
-  const title=document.createElement('strong');title.textContent=p.nombre||'Embarcación sin nombre';content.append(title);
-  const desc=document.createElement('div');desc.textContent=`MMSI ${p.mmsi} · velocidad en ese reporte: ${p.velocidad_nudos??'?'} kn · curso ${p.rumbo_grados??'?'}°`;
-  const destino=document.createElement('div');if(p.destino_declarado)destino.textContent="Destino AIS declarado (no verificado): "+p.destino_declarado;
-  const when=document.createElement('div');when.textContent='Último reporte recibido: '+format(p.ultima_recepcion_utc);
-  const elapsed=document.createElement('div');elapsed.textContent='Antigüedad del reporte: '+age(p.ultima_recepcion_utc)+'. El punto no indica la posición actual ni que la nave esté detenida.';
-  const btn=document.createElement('button');btn.textContent='Ver historial (15 días)';btn.style.color='#fff';btn.addEventListener('click',()=>showVessel(p.mmsi));
-  content.append(desc,destino,when,elapsed,btn);dot.bindPopup(content);
- }
- const newest=d.features.map(f=>f.properties.ultima_recepcion_utc).filter(Boolean).sort().at(-1);
- stat(`${d.features.length} embarcaciones con posición observada · Lote publicado: ${format(d.metadata.publicado_utc)} · Último reporte entre estas naves: ${format(newest)} (hace ${age(newest)}). Envío de lotes: cada ${interval(d.metadata)}. Publicar un lote nuevo no significa recibir una posición nueva. Para recargar, pulsa Actualizar posiciones.`);
- }catch(err){stat('Sin datos publicados todavía o error de red: '+err.message)}finally{refreshing=false}
+ if(busy)return;busy=true;$('reload').disabled=true;$('status').textContent='Consultando fuentes…';
+ try{
+  const requests=await Promise.allSettled([aisClient.getLatest(),json('vms/latest.geojson'),json('vms/manifest.json')]);
+  all=[];failures=[];
+  if(requests[0].status==='fulfilled'){const d=requests[0].value;aisMeta=d.metadata;all.push(...d.features.map(f=>({source:'AIS',p:f.properties,coords:f.geometry.coordinates})));}else{aisMeta=null;failures.push('AIS');}
+  if(requests[1].status==='fulfilled'){const d=requests[1].value;vmsMeta=d.metadata;all.push(...d.features.map(f=>({source:'VMS',p:f.properties,coords:f.geometry.coordinates})));}else{vmsMeta=null;failures.push('VMS (importación pendiente o error de red)');}
+  vmsManifest=requests[2].status==='fulfilled'?requests[2].value:null;
+  render();
+ }finally{busy=false;$('reload').disabled=false;}
 }
-document.getElementById('reload').onclick=refresh;
-document.getElementById('clear').onclick=()=>{drawing=false;corners=[];history.clearLayers();stat('Historial limpiado. Se mantienen las últimas posiciones.')};
-document.getElementById('area').onclick=()=>{drawing=true;corners=[];history.clearLayers();stat('Selecciona dos esquinas del área en el mapa (máximo 2° × 2°).')};
-map.on('click',async ev=>{
- if(!drawing)return;corners.push(ev.latlng);L.circleMarker(ev.latlng,{radius:5,color:'#ed8d00'}).addTo(history);
- if(corners.length<2)return;
- drawing=false;const a=corners[0],b=corners[1];let bbox=[Math.min(a.lng,b.lng),Math.min(a.lat,b.lat),Math.max(a.lng,b.lng),Math.max(a.lat,b.lat)];
- L.rectangle([[bbox[1],bbox[0]],[bbox[3],bbox[2]]],{color:'#e76b28',weight:2}).addTo(history);
- stat('Buscando embarcaciones en el área seleccionada...');
- try{const area=await client.getAreaHistory(bbox,{days:15,onProgress:(n,total)=>stat(`Descargando datos históricos ${n}/${total} archivos...`)});
- for(const v of area.embarcaciones)drawPaths(v.trayectos);
- stat(`${area.cantidad_embarcaciones} embarcaciones fueron observadas en el área · ${area.cantidad_posiciones} posiciones · ${area.archivos_descargados} archivos cargados. No implica tránsito continuo entre mensajes.`);
- }catch(err){stat('No fue posible consultar área: '+err.message)}
-});
+function drawSegments(points,source){
+ const time=p=>source==='VMS'?Date.parse(p[0]+'Z')/1000:p[0]; // Solo diferencias de calendario VMS; no se mezcla con AIS.
+ let part=[],prev=null;
+ const flush=()=>{if(part.length>=2)L.polyline(part,{color:source==='VMS'?'#c16d26':'#008f95',weight:3}).addTo(track);part=[]};
+ for(const p of points){const t=time(p);if(prev!==null&&t-prev>7200)flush();part.push([p[2],p[1]]);prev=t;}flush();
+ for(const p of points)L.circleMarker([p[2],p[1]],{radius:2,color:'#354c5e',weight:1}).addTo(track);
+}
+async function showTrack(v){
+ selected=null;projection.clearLayers();track.clearLayers();$('projection').checked=false;const key=v.source+':'+(v.p.id||v.p.mmsi);$('detail').textContent='Descargando historial de '+label(v)+'…';
+ try{
+  let pts;
+  if(v.source==='VMS'){
+   if(!/^vessels\/[a-f0-9]{24}\.json$/.test(v.p.historial))throw new Error('Ruta de historial inválida');
+   const history=await json('vms/'+v.p.historial);pts=[];
+   if(history.archivos.length>20)throw new Error('Demasiados archivos para esta ventana');
+   for(let i=0;i<history.archivos.length;i+=4){
+    const files=history.archivos.slice(i,i+4);
+    for(const file of files)if(!/^days\/\d{4}-\d{2}-\d{2}\/[a-f0-9]{24}\.json$/.test(file.archivo))throw new Error('Ruta diaria inválida');
+    const blocks=await Promise.all(files.map(file=>json('vms/'+file.archivo)));for(const block of blocks)pts.push(...block.puntos);
+   }
+   pts.sort((a,b)=>a[0].localeCompare(b[0]));
+  }
+  else pts=(await aisClient.getVesselHistory(v.p.mmsi)).puntos;
+  drawSegments(pts,v.source);selected=v;
+  if(track.getLayers().length)map.fitBounds(track.getBounds(),{padding:[35,35],maxZoom:12});
+  historyDescription=label(v)+' · '+identity(v)+'\n'+pts.length+' posiciones observadas (muestras de hasta 15 días, cada 15 min).\nÚltimo dato: '+rowDate(v)+'\nSe interrumpe el trazo ante silencios de más de 2 horas. Las líneas son conexiones gráficas entre puntos; no una ruta exacta ni futura.';
+  $('detail').textContent=historyDescription;
+ }catch(err){$('detail').textContent='No fue posible consultar historial: '+err.message;}
+}
+function drawProjection(){
+ projection.clearLayers();if(historyDescription)$('detail').textContent=historyDescription;if(!$('projection').checked||!selected)return;
+ const v=selected,speed=v.p.velocidad_nudos,heading=v.p.rumbo_grados;
+ if(!Number.isFinite(speed)||!Number.isFinite(heading)){$('detail').textContent+='\nNo hay velocidad y rumbo válidos para extender.';return;}
+ const rad=Math.PI/180,lat=v.coords[1]*rad,lon=v.coords[0]*rad,b=heading*rad,d=speed*1852*.25/6371000;
+ const lat2=Math.asin(Math.sin(lat)*Math.cos(d)+Math.cos(lat)*Math.sin(d)*Math.cos(b));
+ const lon2=lon+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(lat),Math.cos(d)-Math.sin(lat)*Math.sin(lat2));
+ L.polyline([[v.coords[1],v.coords[0]],[lat2/rad,lon2/rad]],{color:'#bb3066',dashArray:'6 6',weight:3}).addTo(projection).bindTooltip('Hipótesis lineal: +15 min desde el reporte histórico. No es posición actual, predicción validada ni ruta navegable. Ignora costa, obstáculos y cambios de rumbo.',{permanent:false});
+ $('detail').textContent+='\nLínea discontinua: extensión ilustrativa de 15 min desde el dato histórico, NO desde ahora; mantiene rumbo/velocidad e ignora obstáculos.';
+}
+$('reload').onclick=refresh;for(const id of ['fleet','ais','vms'])$(id).onchange=()=>{page=0;render()};$('search').oninput=()=>{page=0;render()};
+$('region').onchange=()=>{page=0;track.clearLayers();projection.clearLayers();selected=null;historyDescription='';$('projection').checked=false;$('detail').textContent='Selecciona una embarcación para consultar su trayectoria.';render();const box=boxes[$('region').value];if(box)map.fitBounds([[box[0],box[1]],[box[2],box[3]]],{padding:[20,20]});else map.setView([-48.2,-73.1],5)};
+$('prev').onclick=()=>{page--;render()};$('next').onclick=()=>{page++;render()};$('fit').onclick=()=>{if(markers.getLayers().length)map.fitBounds(markers.getBounds(),{padding:[35,35],maxZoom:10})};
+$('clear').onclick=()=>{track.clearLayers();projection.clearLayers();selected=null;drawing=false;corners=[];$('projection').checked=false;$('detail').textContent='Trayectoria limpiada.'};$('projection').onchange=drawProjection;
+$('area').onclick=()=>{drawing=true;corners=[];track.clearLayers();$('detail').textContent='Área AIS: selecciona dos esquinas, hasta 2° por lado. Para VMS usa los filtros y el historial por embarcación.'};
+map.on('click',async event=>{if(!drawing)return;corners.push(event.latlng);if(corners.length<2)return;drawing=false;const [a,b]=corners,bbox=[Math.min(a.lng,b.lng),Math.min(a.lat,b.lat),Math.max(a.lng,b.lng),Math.max(a.lat,b.lat)];try{const data=await aisClient.getAreaHistory(bbox,{days:15});for(const v of data.embarcaciones)drawSegments(v.puntos.map(p=>p.slice(1)),'AIS');$('detail').textContent='Área AIS: '+data.cantidad_embarcaciones+' naves y '+data.cantidad_posiciones+' posiciones observadas. No incluye VMS.';}catch(e){$('detail').textContent=e.message;}});
 refresh();
 </script>
 </body>
