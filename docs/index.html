@@ -26,8 +26,10 @@ const client=aisMagPages(new URL('.',location.href).href);
 const map=L.map('map',{zoomControl:true}).setView([-53.0,-72.8],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
 const markers=L.featureGroup().addTo(map), history=L.featureGroup().addTo(map);
-const status=document.getElementById('status');let drawing=false,corners=[];
-function format(iso){return iso ? new Date(iso).toLocaleString('es-CL',{timeZone:'America/Punta_Arenas'})+' (Magallanes)' : 'sin registro'}
+const status=document.getElementById('status');let drawing=false,corners=[],refreshing=false;
+function format(iso){return iso ? new Date(iso).toLocaleString('es-CL',{timeZone:'America/Punta_Arenas',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'})+' (UTC−3, Magallanes)' : 'sin registro'}
+function age(iso){const minutes=Math.max(0,Math.floor((Date.now()-Date.parse(iso))/60000));if(!Number.isFinite(minutes))return 'sin registro';return minutes<60 ? minutes+' min' : Math.floor(minutes/60)+' h '+minutes%60+' min'}
+function interval(metadata){const minutes=metadata.periodicidad_publicacion_minutos??metadata.periodicidad_publicacion_horas*60;return Number.isFinite(minutes) ? (minutes<60 ? minutes+' min' : minutes/60+' h') : 'no informado'}
 function stat(t){status.textContent=t}
 function drawPaths(paths){for(const line of paths){if(line.length>=2)L.polyline(line.map(p=>[p[1],p[0]]),{color:'#e76b28',weight:2.6,opacity:.83}).addTo(history)}}
 async function showVessel(mmsi){
@@ -38,20 +40,23 @@ async function showVessel(mmsi){
   }catch(err){stat('No fue posible consultar historial: '+err.message)}
 }
 async function refresh(){
- stat('Descargando últimas posiciones...');markers.clearLayers();
- try{const d=await client.getLatest();for(const feature of d.features){
+ if(refreshing)return;refreshing=true;
+ stat('Descargando últimas posiciones publicadas...');
+ try{const d=await client.getLatest();markers.clearLayers();for(const feature of d.features){
   const p=feature.properties,[lon,lat]=feature.geometry.coordinates;
   const dot=L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:'#009a9f',fillOpacity:.9}).addTo(markers);
   const content=document.createElement('div');
   const title=document.createElement('strong');title.textContent=p.nombre||'Embarcación sin nombre';content.append(title);
-  const desc=document.createElement('div');desc.textContent=`MMSI ${p.mmsi} · ${p.velocidad_nudos??'?'} kn · rumbo ${p.rumbo_grados??'?'}°`;
+  const desc=document.createElement('div');desc.textContent=`MMSI ${p.mmsi} · velocidad en ese reporte: ${p.velocidad_nudos??'?'} kn · curso ${p.rumbo_grados??'?'}°`;
   const destino=document.createElement('div');if(p.destino_declarado)destino.textContent="Destino AIS declarado (no verificado): "+p.destino_declarado;
-  const when=document.createElement('div');when.textContent='Última recepción: '+format(p.ultima_recepcion_utc);
+  const when=document.createElement('div');when.textContent='Último reporte recibido: '+format(p.ultima_recepcion_utc);
+  const elapsed=document.createElement('div');elapsed.textContent='Antigüedad del reporte: '+age(p.ultima_recepcion_utc)+'. El punto no indica la posición actual ni que la nave esté detenida.';
   const btn=document.createElement('button');btn.textContent='Ver historial (15 días)';btn.style.color='#fff';btn.addEventListener('click',()=>showVessel(p.mmsi));
-  content.append(desc,destino,when,btn);dot.bindPopup(content);
+  content.append(desc,destino,when,elapsed,btn);dot.bindPopup(content);
  }
- stat(`${d.features.length} embarcaciones con última posición registrada · Publicado ${format(d.metadata.publicado_utc)} · Periodicidad: 3 horas. No es seguimiento en tiempo real.`);
- }catch(err){stat('Sin datos publicados todavía o error de red: '+err.message)}
+ const newest=d.features.map(f=>f.properties.ultima_recepcion_utc).filter(Boolean).sort().at(-1);
+ stat(`${d.features.length} embarcaciones con posición observada · Lote publicado: ${format(d.metadata.publicado_utc)} · Último reporte entre estas naves: ${format(newest)} (hace ${age(newest)}). Envío de lotes: cada ${interval(d.metadata)}. Publicar un lote nuevo no significa recibir una posición nueva. Para recargar, pulsa Actualizar posiciones.`);
+ }catch(err){stat('Sin datos publicados todavía o error de red: '+err.message)}finally{refreshing=false}
 }
 document.getElementById('reload').onclick=refresh;
 document.getElementById('clear').onclick=()=>{drawing=false;corners=[];history.clearLayers();stat('Historial limpiado. Se mantienen las últimas posiciones.')};
