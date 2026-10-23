@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"725001690","nombre":"CHAITEN","puntos":[[1792753285,-72.832903,-45.463252,9.5,311.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T11:02:01Z","fecha_minima_utc":"2026-09-23T11:02:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"725001690","nombre":"CHAITEN","puntos":[[1792753285,-72.832903,-45.463252,9.5,311.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T11:03:01Z","fecha_minima_utc":"2026-09-23T11:03:01Z"}
