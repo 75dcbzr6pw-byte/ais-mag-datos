@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"701001153","nombre":"HONU","puntos":[[1792717883,-68.30896,-54.810417,6.3,63.8]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T01:14:01Z","fecha_minima_utc":"2026-10-08T01:14:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"701001153","nombre":"HONU","puntos":[[1792718050,-68.304573,-54.809427,1.7,153.3]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T01:15:00Z","fecha_minima_utc":"2026-10-08T01:15:00Z"}
