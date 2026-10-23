@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"701000838","nombre":"EZEQUIEL MB","puntos":[[1792779122,-68.287312,-54.811353,14.5,118.1]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T18:14:01Z","fecha_minima_utc":"2026-09-23T18:14:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"701000838","nombre":"EZEQUIEL MB","puntos":[[1792779122,-68.287312,-54.811353,14.5,118.1]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T18:15:01Z","fecha_minima_utc":"2026-09-23T18:15:01Z"}
