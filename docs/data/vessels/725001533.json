@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"725001533","nombre":null,"puntos":[[1792761682,-72.721372,-45.404867,7.6,57.7]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T17:40:01Z","fecha_minima_utc":"2026-09-23T17:40:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"725001533","nombre":null,"puntos":[[1792761682,-72.721372,-45.404867,7.6,57.7]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T17:41:01Z","fecha_minima_utc":"2026-09-23T17:41:01Z"}
