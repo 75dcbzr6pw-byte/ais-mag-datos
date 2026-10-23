@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"725005603","nombre":"LAMA","puntos":[[1792751014,-73.001815,-45.419742,10.0,121.6]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T10:24:01Z","fecha_minima_utc":"2026-09-23T10:24:01Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"725005603","nombre":"LAMA","puntos":[[1792751014,-73.001815,-45.419742,10.0,121.6]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-23T10:25:01Z","fecha_minima_utc":"2026-09-23T10:25:01Z"}
