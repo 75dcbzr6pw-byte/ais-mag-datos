@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"211701243","nombre":null,"puntos":[[1792846378,-68.297752,-54.841228,47.7,260.2]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-24T15:01:08Z","fecha_minima_utc":"2026-09-24T15:01:08Z"}

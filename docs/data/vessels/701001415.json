@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"701001415","nombre":"GILDRA","puntos":[[1792843320,-68.250183,-54.823745,4.2,37.2]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-10-24T15:01:08Z","fecha_minima_utc":"2026-09-24T15:01:08Z"}
