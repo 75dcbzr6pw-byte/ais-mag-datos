@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"261005055","nombre":"MADOGWY","puntos":[[1793197654,-67.625685,-54.906555,3.7,252.0],[1793199601,-67.640452,-54.909187,1.5,264.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":2,"muestra_min":15,"corte_utc":"2026-10-28T15:08:22Z","fecha_minima_utc":"2026-09-28T15:08:22Z"}
