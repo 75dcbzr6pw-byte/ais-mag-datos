@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"701006386","nombre":"PASO GUARANY","puntos":[[1793282383,-68.26743,-54.825775,5.6,167.4],[1793283281,-68.266733,-54.846447,6.7,227.5],[1793283942,-68.29124,-54.856713,6.0,241.2]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":3,"muestra_min":15,"corte_utc":"2026-10-29T15:08:13Z","fecha_minima_utc":"2026-09-29T15:08:13Z"}
