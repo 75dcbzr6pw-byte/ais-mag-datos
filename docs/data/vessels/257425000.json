@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"257425000","nombre":"ROALD AMUNDSEN","puntos":[[1793523373,-68.193118,-54.830075,14.2,290.7],[1793523727,-68.231062,-54.821937,14.3,288.7],[1793528181,-68.295558,-54.810625,0.0,135.6]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":3,"muestra_min":15,"corte_utc":"2026-11-01T15:01:21Z","fecha_minima_utc":"2026-10-02T15:01:21Z"}
