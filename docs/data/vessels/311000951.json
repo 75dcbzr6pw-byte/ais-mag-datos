@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"311000951","nombre":"DOUGLAS MAWSON","puntos":[[1794118216,-68.116355,-54.846603,14.2,288.1],[1794119357,-68.24023,-54.82201,14.2,289.8],[1794120222,-68.29335,-54.811902,2.0,293.6]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":3,"muestra_min":15,"corte_utc":"2026-11-08T15:01:28Z","fecha_minima_utc":"2026-10-09T15:01:28Z"}
