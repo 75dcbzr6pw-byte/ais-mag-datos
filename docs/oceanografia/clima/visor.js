@@ -257,8 +257,15 @@ function clima(bundle,slot){
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle='rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='rgba(248,252,255,.77)';c.lineWidth=.85;c.beginPath();
   for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
-   let u=current.velocity[k],v=current.velocity[k+1];if(previous&&Number.isFinite(previous.velocity[k])){u=previous.velocity[k]+(u-previous.velocity[k])*fraction;v=previous.velocity[k+1]+(v-previous.velocity[k+1])*fraction}
-   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u)||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
+   let u=current.velocity[k],v=current.velocity[k+1];
+   if(previous&&Number.isFinite(previous.velocity[k])&&Number.isFinite(u)){
+    const a=previous.velocity[k],b=previous.velocity[k+1],before=Math.hypot(a,b),after=Math.hypot(u,v);
+    if(before>0&&after>0){
+     const angle=Math.atan2(b,a)+fraction*Math.atan2(a*v-b*u,a*u+b*v);
+     const speed=before+(after-before)*fraction;u=speed*Math.cos(angle);v=speed*Math.sin(angle);
+    }else{u=a+(u-a)*fraction;v=b+(v-b)*fraction}
+   }
+   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
    const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*.768*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*24*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
