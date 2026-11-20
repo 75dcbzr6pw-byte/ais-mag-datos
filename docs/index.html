@@ -10,7 +10,7 @@
 <div id="map"></div>
 <aside class="panel" aria-label="Controles de embarcaciones">
  <input id="search" type="search" placeholder="Nombre, MMSI, matrícula o señal de llamada" aria-label="Buscar por nombre, MMSI, matrícula o señal de llamada" autocomplete="off">
- <div class="sources"><label><input id="ais" type="checkbox" checked> AIS</label><label><input id="vms" type="checkbox" checked> VMS Sernapesca</label><button id="reload" title="Actualizar fuentes" aria-label="Actualizar fuentes">↻</button></div>
+ <div class="sources"><a href="oceanografia/clima/">Clima</a><label><input id="ais" type="checkbox" checked> AIS</label><label><input id="vms" type="checkbox" checked> VMS Sernapesca</label><button id="reload" title="Actualizar fuentes" aria-label="Actualizar fuentes">↻</button></div>
  <div class="filters"><select id="region" aria-label="Región"><option value="">Tres regiones</option><option>Los Lagos</option><option value="Aysen">Aysén</option><option>Magallanes</option></select><select id="fleet" aria-label="Flota"><option value="">Todas las flotas</option><option value="acuicultura">Acuicultura</option><option value="flota_transportadoras">Transportadoras</option><option value="flota_artesanal">Extractiva artesanal</option><option value="flota_industrial">Extractiva industrial</option></select></div>
  <div class="actions"><button id="fit">Encuadrar</button><button id="clear">Limpiar selección</button><button id="area">Área AIS</button></div>
  <div id="status" class="status" role="status">Cargando…</div>
