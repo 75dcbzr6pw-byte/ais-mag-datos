@@ -123,7 +123,7 @@ function clima(bundle,slot){
   const source=l.key==='air'?weatherSource+(period==='6 h'?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
   q('[data-source]').textContent=(l.key==='inner'&&period==='6 h'?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period==='6 h'?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período');
-  size();current.texture=texture(current);if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
+  size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
  function size(){
@@ -158,6 +158,67 @@ function clima(bundle,slot){
   if(weight)return [u*l.factor/weight,v*l.factor/weight,mag*l.factor/weight];
   return fallback();
  }
+ // Índice regional de donantes para un fiordo cuyo acceso al mar queda fuera de pantalla.
+ const coastalLookup=new Map();
+ function regionalDonors(state){
+  const grids=[state.detail,state.field,state.outer].filter(Boolean),l=state.layer;
+  if(!grids.length)return;
+  const west=-77,east=-65,north=-39.5,south=-57,step=.01;
+  const width=Math.round((east-west)/step)+1,height=Math.round((north-south)/step)+1;
+  const sources=[];let signature=2166136261;
+  for(const g of grids){
+   const offset=g.n*l.channels.at(-1);
+   for(let i=0;i<g.n;i++)if(Number.isFinite(g.a[offset+i])){
+    sources.push([g,i]);signature=Math.imul(signature^(i+1),16777619);
+   }
+   signature=Math.imul(signature^g.n,16777619);
+  }
+  const key=[state.id,signature,sources.length].join('/');
+  let donors=coastalLookup.get(key);
+  if(!donors){
+   donors=new Int32Array(width*height);const queue=new Int32Array(donors.length);let tail=0;
+   for(let s=0;s<sources.length;s++){
+    const [g,i]=sources[s],lon=g.x+(i%g.nx)*g.dx,lat=g.y+Math.floor(i/g.nx)*g.dy;
+    const x=Math.round((lon-west)/step),y=Math.round((north-lat)/step),k=y*width+x;
+    if(x<0||x>=width||y<0||y>=height||donors[k]||!isSea(lon,lat)||!isSea(west+x*step,north-y*step))continue;
+    donors[k]=s+1;queue[tail++]=k;
+   }
+   for(let head=0;head<tail;head++){
+    const k=queue[head],x=k%width,y=Math.floor(k/width),lon=west+x*step,lat=north-y*step;
+    for(const n of [x>0?k-1:-1,x+1<width?k+1:-1,y>0?k-width:-1,y+1<height?k+width:-1]){
+     if(n<0||donors[n])continue;
+     const nx=n%width,ny=Math.floor(n/width),nl=west+nx*step,nt=north-ny*step;
+     if(!isSea(nl,nt)){donors[n]=-1;continue}
+     if(!isSea((lon+nl)/2,(lat+nt)/2))continue;
+     donors[n]=donors[k];queue[tail++]=n;
+    }
+   }
+   if(coastalLookup.size>=2)coastalLookup.delete(coastalLookup.keys().next().value);
+   coastalLookup.set(key,donors);
+  }
+  const nearestCache=new Map();
+  return (lon,lat)=>{
+   const x=Math.round((lon-west)/step),y=Math.round((north-lat)/step);
+   if(x<0||x>=width||y<0||y>=height)return;
+   let source=sources[donors[y*width+x]-1],quality=1;
+   if(!source){
+    // En ensenadas con una boca subpíxel, atribuir la estimación a su muestra marina vecina.
+    const key=x+'/'+y;quality=2;
+    if(!nearestCache.has(key)){
+     let best=Infinity;const cos=Math.cos(lat*Math.PI/180);
+     for(const candidate of sources){
+      const [g,i]=candidate,sx=g.x+(i%g.nx)*g.dx,sy=g.y+Math.floor(i/g.nx)*g.dy;
+      const dist=((sx-lon)*cos)**2+(sy-lat)**2;
+      if(dist<best&&isSea(sx,sy)){source=candidate;best=dist}
+     }
+     nearestCache.set(key,source);
+    }else source=nearestCache.get(key);
+   }
+   if(!source)return;
+   const [g,i]=source,read=channel=>g.a[channel*g.n+i]*l.factor;
+   return [l.vector?read(l.channels[0]):0,l.vector?read(l.channels[1]):0,read(l.channels.at(-1)),quality];
+  };
+ }
  function texture(s,recolor=false){
   const step=4,w=Math.ceil(base.width/step),h=Math.ceil(base.height/step),c=canvas();c.width=w;c.height=h;
   const ctx=c.getContext('2d'),image=ctx.createImageData(w,h),p=palette(),l=s.layer;
@@ -182,10 +243,18 @@ function clima(bundle,slot){
      s.estimated[n]=1;queue[tail++]=n;
     }
    }
+   if(ocean){
+    let lookup;
+    for(let k=0;k<eligible.length;k++)if(eligible[k]&&!Number.isFinite(s.values[k])){
+     lookup??=regionalDonors(s);if(!lookup)break;
+     const val=lookup(lons[(k%w)*step],lats[Math.floor(k/w)*step]);if(!val)continue;
+     s.values[k]=val[2];s.velocity[k*2]=val[0];s.velocity[k*2+1]=val[1];s.estimated[k]=val[3];
+    }
+   }
   }
   for(let k=0;k<s.values.length;k++)if(Number.isFinite(s.values[k])){
    const bin=Math.round(127*Math.max(0,Math.min(1,(s.values[k]-lo)/(hi-lo))));
-   image.data.set(p[bin],k*4);if(s.estimated[k])image.data[k*4+3]*=.55;
+   image.data.set(p[bin],k*4);if(s.estimated[k])image.data[k*4+3]*=s.estimated[k]===2&&((k%w+Math.floor(k/w))%5===0)?.28:.55;
   }
   ctx.putImageData(image,0,0);return c;
  }
