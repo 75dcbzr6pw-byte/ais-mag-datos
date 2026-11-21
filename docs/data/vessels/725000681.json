@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"725000681","nombre":"DON ANDRES K","puntos":[[1795270944,-72.860313,-45.3952,3.9,19.5],[1795272093,-72.85946,-45.39114,0.0,8.8],[1795272991,-72.859473,-45.391163,0.0,8.8]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":3,"muestra_min":15,"corte_utc":"2026-11-21T15:02:14Z","fecha_minima_utc":"2026-10-22T15:02:14Z"}
