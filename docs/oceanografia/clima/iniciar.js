@@ -8,3 +8,17 @@ async function openClimate(){const [b,coast]=await Promise.all([get('actual.json
  if(!pending.has(day))pending.set(day,get(day+'.gz?v='+b.files[day+'.gz'].slice(0,12)).then(unpack).then(groups=>{for(const [key,g] of Object.entries(groups))for(const [kind,frames] of Object.entries(g))Object.assign(b.sets[key][kind],frames)}).catch(e=>{pending.delete(day);throw e}));return pending.get(day)}));
  clima(b,document.querySelector('#climaTool').parentElement);document.querySelector('#status').hidden=true;document.querySelector('#climaTool').click()}
 window.addEventListener('unhandledrejection',()=>{const s=document.querySelector('#status');s.hidden=false;s.textContent='No se pudo cargar el período. Vuelve a seleccionar la fecha para reintentar.'});openClimate();
+(function fechasVisibles(){
+ const format=value=>value.replace(/\b(20\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(?=\b|T)/g,'$3-$2-$1');
+ function visit(node){
+  if(node.nodeType===3){if(node.parentElement&&!node.parentElement.closest('script,style,textarea,option[value=""],[contenteditable=true]')){
+   const value=node.nodeValue;if(value.includes('-')){const next=format(value);if(value!==next)node.nodeValue=next}
+  }return}
+  if(node.nodeType!==1||node.matches('script,style,textarea'))return;
+  if(node.tagName==='OPTION'&&!node.hasAttribute('value'))node.value=node.value;
+  for(const attr of ['title','aria-label','aria-valuetext'])if(node.hasAttribute(attr)){const text=node.getAttribute(attr),next=format(text);if(next!==text)node.setAttribute(attr,next)}
+  for(const child of node.childNodes)visit(child)
+ }
+ const root=document.body;visit(root);
+ new MutationObserver(changes=>{for(const c of changes){if(c.type==='childList'){for(const child of c.addedNodes)visit(child)}else visit(c.target)}}).observe(root,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['title','aria-label','aria-valuetext']})
+})();

@@ -1,4 +1,27 @@
 function clima(bundle,slot){
+ /* Bootstrap Icons (braces-asterisk, moisture, cloud-sun-fill).
+The MIT License (MIT)
+
+Copyright (c) 2019-2024 The Bootstrap Authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
  const {sets,layers,coast}=bundle;
  const d=document.createElement('section');d.id='climaVista';d.className='workspace-panel-v39';d.hidden=true;
  d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div data-modes class="clima-modes"></div><div class="clima-bar"><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16"><path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267" /></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button></div><div data-marks></div><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
@@ -27,10 +50,10 @@ function clima(bundle,slot){
  function stop(){run++;playing=false;clearTimeout(timer);clearTimeout(scrubTimer);button(play,'▶','Reproducir')}
  function closeEditor(){editing=null;q('[data-editor]').hidden=true}
  function menu(){
-  const views=layer().views[mode];if(!views[period])period='Día';
+  const views=layer().views[mode];if(!views[period])period=mode==='Actual'?(Object.keys(views).find(k=>k.endsWith(' h'))||'Día'):'Día';
   const line=timeline();index=line.findIndex(t=>t.stamps.some(s=>s.slice(0,10)===anchor.slice(0,10)));
   if(index<0)index=anchor<line[0].stamps[0]?0:line.length-1;
-  options('[data-modes]',Object.keys(layer().views),mode,v=>{stop();closeEditor();mode=v;period=v==='Actual'&&layer().views.Actual['6 h']?'6 h':'Día';anchor=layer().views[v][period][0].stamps[0];menu()});
+  options('[data-modes]',Object.keys(layer().views),mode,v=>{stop();closeEditor();mode=v;period=v==='Actual'?(Object.keys(layer().views.Actual).find(k=>k.endsWith(' h'))||'Día'):'Día';anchor=layer().views[v][period][0].stamps[0];menu()});
   q('[data-modes]').lastChild.title='Últimos 15 días del archivo regional y pronóstico disponible';
   options('[data-period]',Object.keys(views),period,v=>{stop();period=v;menu()});
   const fields=q('[data-fields]');fields.replaceChildren();
@@ -61,15 +84,15 @@ function clima(bundle,slot){
   const [lo,hi]=style().range;
   for(const input of d.querySelectorAll('[data-limit]')){
    const end=Number(input.dataset.limit);
-   input.min=l.min;input.max=l.max;input.step=(l.max-l.min)/1000;input.value=end?hi:lo;
+   input.min=Math.round(l.min*f);input.max=Math.max(+input.min+1,Math.round(l.max*f));input.step=1;input.value=Math.round((end?hi:lo)*f);
    input.setAttribute('aria-valuetext',format((end?hi:lo)*f,3)+' '+unit);
   }
   const marks=q('[data-marks]');marks.replaceChildren();
   for(let i=0;i<6;i++){const n=document.createElement('span');n.textContent=(i===5&&id.startsWith('wind')?'≥':'')+format((lo+(hi-lo)*i/5)*f,2)+(i===5?' '+unit:'');marks.append(n)}
  }
  for(const input of d.querySelectorAll('[data-limit]'))input.oninput=()=>{
-  const end=Number(input.dataset.limit),range=style().range,step=Number(input.step);
-  range[end]=end?Math.max(+input.value,range[0]+step):Math.min(+input.value,range[1]-step);
+  const end=Number(input.dataset.limit),range=style().range,factor=marine()?1.94384:1,step=1/factor;
+  range[end]=end?Math.max(+input.value/factor,range[0]+step):Math.min(+input.value/factor,range[1]-step);
   legend();cancelAnimationFrame(recolorFrame);recolorFrame=requestAnimationFrame(()=>{
    if(current?.id!==id)return;current.texture=texture(current,true);
    if(previous?.id===id)previous.texture=texture(previous,true);paint(previous?fraction:1);
@@ -110,7 +133,7 @@ function clima(bundle,slot){
  }
  async function update(smooth){
   const ticket=++revision,t=timeline()[index],l=layer();anchor=t.stamps[0];slider.value=index;
-  const stamp=(period==='Semana'?'Semana del ':'')+t.key.replace('T',' ')+(period==='6 h'?':00 UTC':'');
+  const stamp=(period==='Semana'?'Semana del ':'')+t.key.replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
   if(pane.hidden)return;
   const [field,outer,air,overlays,detail]=await Promise.all([average(l.key,t.stamps),marine()?average('outer',t.stamps):null,average('air',t.stamps),Promise.all([...checked].map(async k=>[k,await average(k,t.stamps)])),l.detail?average(l.detail,t.stamps):null]);
@@ -120,9 +143,9 @@ function clima(bundle,slot){
   const first=t.stamps[0].slice(0,10),last=t.stamps.at(-1).slice(0,10),lastERA=sets.air.lastERA;
   const projected=last>sets.air.analysisEnd;
   const weatherSource=projected?(first>sets.air.analysisEnd?'Pronóstico GFS':'Análisis y pronóstico GFS')+' · emisión '+sets.air.cycle.slice(0,13).replace('T',' ')+':00 UTC':last<=lastERA?'ERA5':first>lastERA?'NOAA GFS · análisis':'ERA5 y NOAA GFS';
-  const source=l.key==='air'?weatherSource+(period==='6 h'?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
+  const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
-  q('[data-source]').textContent=(l.key==='inner'&&period==='6 h'?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period==='6 h'?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período');
+  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período');
   size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
@@ -132,7 +155,7 @@ function clima(bundle,slot){
   if(viewKey===key)return;viewKey=key;water=null;previous=null;
   for(const c of [base,flow,pressure,symbols]){c.width=w;c.height=h}
   lons=Array.from({length:w},(_,i)=>map.containerPointToLatLng([i,0]).lng);lats=Array.from({length:h},(_,j)=>map.containerPointToLatLng([0,j]).lat);
-  particles=Array.from({length:Math.floor(w*h/250)},()=>[Math.random()*w,Math.random()*h,65+Math.random()*140]);
+  particles=Array.from({length:Math.floor(w*h/145)},()=>[Math.random()*w,Math.random()*h,65+Math.random()*140]);
  }
  function waterMask(){if(water)return water;water=canvas();water.width=base.width;water.height=base.height;
   const c=water.getContext('2d'),img=c.createImageData(water.width,water.height);
@@ -148,7 +171,7 @@ function clima(bundle,slot){
   const vector=l.vector;let u=0,v=0,mag=0,weight=0;
   function add(a,b,w){if(w<=0||a<0||a>=g.nx||b<0||b>=g.ny)return;
    const k=b*g.nx+a,scalar=g.a[l.channels.at(-1)*g.n+k];if(!Number.isFinite(scalar))return;
-   if(sea){const dx=g.x+a*g.dx-lon,dy=g.y+b*g.dy-lat,steps=Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/coast.step);
+   if(!state.id.startsWith('wind')){const dx=g.x+a*g.dx-lon,dy=g.y+b*g.dy-lat,steps=Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/coast.step);
     for(let z=1;z<=steps;z++)if(!isSea(lon+dx*z/steps,lat+dy*z/steps))return}
    weight+=w;mag+=scalar*w;
    if(vector){u+=g.a[l.channels[0]*g.n+k]*w;v+=g.a[l.channels[1]*g.n+k]*w}
@@ -324,7 +347,7 @@ function clima(bundle,slot){
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle='rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
-  c.strokeStyle='rgba(248,252,255,.77)';c.lineWidth=.85;c.beginPath();
+  c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
   for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
    let u=current.velocity[k],v=current.velocity[k+1];
    if(previous&&Number.isFinite(previous.velocity[k])&&Number.isFinite(u)){
@@ -335,10 +358,10 @@ function clima(bundle,slot){
     }else{u=a+(u-a)*fraction;v=b+(v-b)*fraction}
    }
    if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
-   const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*.768*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*24*(.35+.85*Math.sqrt(ratio));
+   const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*(.768+.55*Math.max(0,Math.min(1,(magnitude-45)/30)))*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
-   c.moveTo(x,y);c.lineTo(p[0],p[1]);
+   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.lineTo(p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
   }c.stroke();
  }
  async function move(n,smooth=true){const next=Math.max(0,Math.min(timeline().length-1,index+n));if(next===index)return;index=next;await update(smooth)}
