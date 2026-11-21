@@ -9,7 +9,7 @@ async function openClimate(){const [b,coast]=await Promise.all([get('actual.json
  clima(b,document.querySelector('#climaTool').parentElement);document.querySelector('#status').hidden=true;document.querySelector('#climaTool').click()}
 window.addEventListener('unhandledrejection',()=>{const s=document.querySelector('#status');s.hidden=false;s.textContent='No se pudo cargar el período. Vuelve a seleccionar la fecha para reintentar.'});openClimate();
 (function fechasVisibles(){
- const format=value=>value.replace(/\b(20\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(?=\b|T)/g,'$3-$2-$1');
+ const format=value=>value.replace(/\b((?:19|20)\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(?=\b|T)/g,'$3-$2-$1');
  function visit(node){
   if(node.nodeType===3){if(node.parentElement&&!node.parentElement.closest('script,style,textarea,option[value=""],[contenteditable=true]')){
    const value=node.nodeValue;if(value.includes('-')){const next=format(value);if(value!==next)node.nodeValue=next}
