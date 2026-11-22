@@ -146,6 +146,7 @@ THE SOFTWARE.
    }
    const direction=values.WindDirection;
    const hasWind=direction&&end-direction[0]<86400000&&Number.isFinite(direction[1]);
+   const alternative=['Temperature','RH','Pressure','Rain'].map(key=>values[key]).find(Boolean);
    const symbol=hasWind?'↑':'●';
    const speed=values.WindSpeed, fresh=speed&&end-speed[0]<86400000, kmh=fresh?speed[1]*3.6:null;
    const range=id.startsWith('wind')?style().range:[0,75],scaled=fresh?Math.max(0,Math.min(127,Math.round(127*(kmh-range[0])/(range[1]-range[0])))):null;
@@ -153,7 +154,7 @@ THE SOFTWARE.
    const screen=map.latLngToLayerPoint([site.lat,site.lon]);let offset=0;
    while(occupied.some(p=>Math.abs(p.x-screen.x)<53&&Math.abs(p.y-screen.y-offset)<18))offset+=20;
    occupied.push({x:screen.x,y:screen.y+offset});
-   const icon=L.divIcon({className:'',iconSize:[50,20],iconAnchor:[25,10-offset],html:'<span style="display:flex;box-sizing:border-box;width:50px;height:20px;justify-content:space-between;padding-inline:5px;font-variant-numeric:tabular-nums;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;border:1px solid #ffffff8c;backdrop-filter:blur(5px);background:color-mix(in srgb,'+bg+' 35%,#26384199);font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(speed?Math.round(speed[1]*3.6)+(fresh?'':'*'):'s/d')+'</span>'});
+   const icon=L.divIcon({className:'',iconSize:[50,20],iconAnchor:[25,10-offset],html:'<span style="display:flex;box-sizing:border-box;width:50px;height:20px;justify-content:space-between;padding-inline:5px;font-variant-numeric:tabular-nums;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;border:1px solid #ffffff8c;backdrop-filter:blur(5px);background:color-mix(in srgb,'+bg+' 35%,#26384199);font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(speed?Math.round(speed[1]*3.6)+(fresh?'':'*'):alternative?Math.round(alternative[1])+({'°C':'°','hPa':'','%':'%','mm':'㎜'}[alternative[2]]||''):'s/d')+'</span>'});
    const marker=L.marker([site.lat,site.lon],{icon,pane:'climaEstaciones',title:(site.source||'REDMET')+' · '+site.name}).addTo(metGroup);registerHit(marker);
    const card=document.createElement('div'),title=document.createElement('strong');title.textContent=(site.source||'REDMET')+' · '+site.name+(site.source==='DMC'?' · Hora del resumen UTC':'');card.append(title);
    const labels={WindDirection:'Viento desde',WindSpeed:'Viento',GustSpeed:'Ráfaga',Temperature:'Temperatura del aire',RH:'Humedad relativa',Rain:'Precipitación',Pressure:'Presión',DewPoint:'Punto de rocío',SolarRadiation:'Radiación solar',PAR:'Radiación PAR'};
@@ -162,7 +163,7 @@ THE SOFTWARE.
     line.textContent=(labels[key]||key)+' · '+format(value,2)+' '+unit+' · '+d.slice(8,10)+'-'+d.slice(5,7)+'-'+d.slice(0,4)+' '+d.slice(11,16)+' UTC';card.append(line)
    }
    if(!Object.keys(values).length)card.append(document.createElement('br'),'Sin lectura archivada para esta fecha');
-   marker.bindTooltip(site.name+' · '+(speed?Math.round(speed[1]*3.6)+' km/h · '+new Date(speed[0]).toLocaleDateString('es-CL',{timeZone:'UTC'})+(fresh?'':' · última lectura anterior'):'Sin viento registrado a esta fecha'));
+   marker.bindTooltip(site.name+' · '+(speed?Math.round(speed[1]*3.6)+' km/h · '+new Date(speed[0]).toLocaleDateString('es-CL',{timeZone:'UTC'})+(fresh?'':' · última lectura anterior'):alternative?format(alternative[1],1)+' '+alternative[2]+' · '+new Date(alternative[0]).toLocaleDateString('es-CL',{timeZone:'UTC'}):'Sin lectura registrada a esta fecha'));
    marker.on('click',()=>{let panel=q('[data-estacion]');if(!panel){panel=document.createElement('section');panel.dataset.estacion='';d.querySelector('.clima-body').append(panel)}panel.replaceChildren(card);
     const choose=document.createElement('select');choose.ariaLabel='Serie histórica de la estación';for(const key of Object.keys(values))choose.add(new Option(labels[key]||key,key));panel.append(choose);
     const chart=document.createElement('canvas');chart.width=310;chart.height=70;panel.append(chart);
