@@ -15,5 +15,5 @@ body.ui-dark-v37 :is(#filtersWorkspaceV39,#fleetPanelV39,#climaVista) :is(select
 body.ui-dark-v37 #filtersWorkspaceV39 label *{color:inherit!important}
 #climaVista button[aria-pressed=true]{box-shadow:inset 0 0 0 2px currentColor!important}
 .leaflet-climaEstaciones-pane .leaflet-interactive,.leaflet-climaEstaciones-pane .leaflet-marker-icon{pointer-events:auto!important;cursor:pointer}
-
+.leaflet-climaEstaciones-pane{z-index:695!important}.leaflet-tooltip-pane:has(.leaflet-tooltip){z-index:698}
 html,body,#map{height:100%;margin:0}body{font:13px system-ui;color:#1b3541}.tools{position:absolute;right:10px;top:10px;z-index:1100}.tools button{padding:8px 12px}#climaVista{position:absolute;top:10px;right:72px;z-index:1000;border-radius:8px;overflow:auto;background:#f3f7f9ed;box-shadow:0 2px 12px #2345}#climaVista header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px}#climaVista h2{font-size:15px;margin:0}.context-actions-v39{display:flex;gap:3px}.context-actions-v39 svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}.context-actions-v39 button{height:24px}.context-concealed-v39{opacity:0}.clima-fields{gap:3px}#status{position:absolute;bottom:24px;left:10px;background:white;z-index:1000}
