@@ -170,7 +170,7 @@ THE SOFTWARE.
   if(viewKey===key)return;viewKey=key;water=null;previous=null;
   for(const c of [base,flow,pressure,symbols]){c.width=w;c.height=h}
   lons=Array.from({length:w},(_,i)=>map.containerPointToLatLng([i,0]).lng);lats=Array.from({length:h},(_,j)=>map.containerPointToLatLng([0,j]).lat);
-  particles=Array.from({length:Math.floor(w*h/145)},()=>[Math.random()*w,Math.random()*h,65+Math.random()*140]);
+  particles=Array.from({length:Math.floor(w*h/145)},()=>[Math.random()*w,Math.random()*h,65+Math.random()*140,Math.random()]);
  }
  function waterMask(){if(water)return water;water=canvas();water.width=base.width;water.height=base.height;
   const c=water.getContext('2d'),img=c.createImageData(water.width,water.height);
@@ -378,6 +378,8 @@ THE SOFTWARE.
   if(previous){const f=Math.min(1,(now-started)/duration);fraction=f;
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
+  const wind=current.id.startsWith('wind');
+  const [minimum,maximum]=wind?style().range:[0,1];
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.965)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
   for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
@@ -390,9 +392,18 @@ THE SOFTWARE.
     }else{u=a+(u-a)*fraction;v=b+(v-b)*fraction}
    }
    if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
-   const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*(.768+.55*Math.max(0,Math.min(1,(magnitude-45)/30)))*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
+   const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),intensity=Math.min(1,Math.max(0,(magnitude-minimum)/(maximum-minimum||1)));
+   const gain=wind?dt*(.38+.94*Math.pow(Math.min(1,magnitude/75),1.7)):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
+   if(wind){
+    // Un umbral fijo por partícula evita el parpadeo entre fotogramas.
+    if(!magnitude||p[3]>.14+.56*intensity)continue;
+    const tail=2.3+10*intensity*intensity;
+    c.moveTo(x-tail*u/magnitude,y+tail*v/magnitude);
+    c.lineTo(p[0],p[1]);
+    continue;
+   }
    if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
   }c.stroke();
  }
