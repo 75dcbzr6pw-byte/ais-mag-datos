@@ -59,6 +59,10 @@ THE SOFTWARE.
  }
  function detailBox(){let box=q('[data-estacion]');if(!box){box=document.createElement('section');box.dataset.estacion='';q('.clima-body').append(box)}context.show('clima');box.scrollIntoView({block:'nearest'});return box}
 
+ // Own station activation before other module handlers on the map container.
+ const hitMarkers=new WeakMap();
+ function registerHit(marker){const el=marker.getElement();if(el)hitMarkers.set(el,marker)}
+ stationPane.addEventListener('click',e=>{const marker=hitMarkers.get(e.target.closest('.leaflet-marker-icon'));if(marker){e.stopPropagation();marker.fire('click',{originalEvent:e,latlng:marker.getLatLng()})}},true);
  const floats=L.layerGroup(),markers=new Map();let tracks=[],trackStart=0,lastBase='wind';
  function moveFloats(now){if(!argoOn||!tracks.length)return;
   const f=Math.min(1,Math.max(0,(now-trackStart)/duration)),t=f*f*(3-2*f);
@@ -110,7 +114,7 @@ THE SOFTWARE.
    };m.on('popupopen',m.compareProfile);
 
   }
-  floats.addTo(map);
+  floats.addTo(map);markers.forEach(registerHit);
  }
  const riverGroup=L.layerGroup();let riverOn=false;
  function drawRivers(stamp){
@@ -123,7 +127,7 @@ THE SOFTWARE.
    const card=document.createElement('div');
    card.textContent='FLOW · '+(site.name==='S/N'?'Salida '+site.id:site.name)+' · Media histórica del mes '+(month+1)+': '+format(value,2)+' m³/s · Caudal simulado por VIC';
    if(site.id===12072)continue;
-   L.marker([site.lat,site.lon],{pane:'climaEstaciones',title:'FLOW · '+site.id,icon:glassPoint(9,'#7eafb7')}).bindTooltip(card.textContent).on('click',()=>detailBox().replaceChildren(card)).addTo(riverGroup)
+   L.marker([site.lat,site.lon],{pane:'climaEstaciones',title:'FLOW · '+site.id,icon:glassPoint(9,'#7eafb7')}).bindTooltip(card.textContent).on('click',()=>detailBox().replaceChildren(card)).on('add',function(){registerHit(this)}).addTo(riverGroup)
 
   }
  }
@@ -147,10 +151,10 @@ THE SOFTWARE.
    const range=id.startsWith('wind')?style().range:[0,75],scaled=fresh?Math.max(0,Math.min(127,Math.round(127*(kmh-range[0])/(range[1]-range[0])))):null;
    const bg=scaled===null?'#426271':id.startsWith('wind')?'rgb('+palette()[scaled].slice(0,3).join(',')+')':['#244c7d','#257e91','#37964c','#a0a442','#c17848','#b74862'][Math.min(5,Math.floor(scaled*6/128))];
    const screen=map.latLngToLayerPoint([site.lat,site.lon]);let offset=0;
-   while(occupied.some(p=>Math.abs(p.x-screen.x)<35&&Math.abs(p.y-screen.y-offset)<18))offset+=20;
+   while(occupied.some(p=>Math.abs(p.x-screen.x)<53&&Math.abs(p.y-screen.y-offset)<18))offset+=20;
    occupied.push({x:screen.x,y:screen.y+offset});
-   const icon=L.divIcon({className:'',iconSize:[32,16],iconAnchor:[16,8-offset],html:'<span style="display:inline-flex;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;border:1px solid #ffffff8c;backdrop-filter:blur(5px);background:color-mix(in srgb,'+bg+' 35%,#26384199);font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(fresh?Math.round(kmh):'—')+'</span>'});
-   const marker=L.marker([site.lat,site.lon],{icon,pane:'climaEstaciones',title:(site.source||'REDMET')+' · '+site.name}).addTo(metGroup);
+   const icon=L.divIcon({className:'',iconSize:[50,20],iconAnchor:[25,10-offset],html:'<span style="display:flex;box-sizing:border-box;width:50px;height:20px;justify-content:space-between;padding-inline:5px;font-variant-numeric:tabular-nums;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;border:1px solid #ffffff8c;backdrop-filter:blur(5px);background:color-mix(in srgb,'+bg+' 35%,#26384199);font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(speed?Math.round(speed[1]*3.6)+(fresh?'':'*'):'s/d')+'</span>'});
+   const marker=L.marker([site.lat,site.lon],{icon,pane:'climaEstaciones',title:(site.source||'REDMET')+' · '+site.name}).addTo(metGroup);registerHit(marker);
    const card=document.createElement('div'),title=document.createElement('strong');title.textContent=(site.source||'REDMET')+' · '+site.name+(site.source==='DMC'?' · Hora del resumen UTC':'');card.append(title);
    const labels={WindDirection:'Viento desde',WindSpeed:'Viento',GustSpeed:'Ráfaga',Temperature:'Temperatura del aire',RH:'Humedad relativa',Rain:'Precipitación',Pressure:'Presión',DewPoint:'Punto de rocío',SolarRadiation:'Radiación solar',PAR:'Radiación PAR'};
    for(const [key,[time,value,unit]] of Object.entries(values)){
@@ -158,9 +162,9 @@ THE SOFTWARE.
     line.textContent=(labels[key]||key)+' · '+format(value,2)+' '+unit+' · '+d.slice(8,10)+'-'+d.slice(5,7)+'-'+d.slice(0,4)+' '+d.slice(11,16)+' UTC';card.append(line)
    }
    if(!Object.keys(values).length)card.append(document.createElement('br'),'Sin lectura archivada para esta fecha');
-   marker.bindTooltip(site.name+' · '+(fresh?Math.round(kmh)+' km/h':'Sin viento reciente'));
+   marker.bindTooltip(site.name+' · '+(speed?Math.round(speed[1]*3.6)+' km/h · '+new Date(speed[0]).toLocaleDateString('es-CL',{timeZone:'UTC'})+(fresh?'':' · última lectura anterior'):'Sin viento registrado a esta fecha'));
    marker.on('click',()=>{let panel=q('[data-estacion]');if(!panel){panel=document.createElement('section');panel.dataset.estacion='';d.querySelector('.clima-body').append(panel)}panel.replaceChildren(card);
-    const choose=document.createElement('select');choose.ariaLabel='Serie histórica REDMET';for(const key of Object.keys(values))choose.add(new Option(labels[key]||key,key));panel.append(choose);
+    const choose=document.createElement('select');choose.ariaLabel='Serie histórica de la estación';for(const key of Object.keys(values))choose.add(new Option(labels[key]||key,key));panel.append(choose);
     const chart=document.createElement('canvas');chart.width=310;chart.height=70;panel.append(chart);
     const plot=()=>{const rows=site.days.map(day=>day[choose.value]).filter(r=>r&&r[0]<=end);const ctx=chart.getContext('2d');ctx.clearRect(0,0,310,70);if(!rows.length)return;const ys=rows.map(r=>r[1]),min=Math.min(...ys),max=Math.max(...ys);ctx.strokeStyle='#32a8bd';ctx.beginPath();rows.forEach(([x,y],i)=>{const px=5+300*(x-rows[0][0])/Math.max(1,rows.at(-1)[0]-rows[0][0]),py=49-45*(y-min)/Math.max(.001,max-min);if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py)});ctx.stroke();ctx.fillStyle=getComputedStyle(d).color;ctx.fillText(new Date(rows[0][0]).toLocaleDateString('es-CL')+' — '+new Date(rows.at(-1)[0]).toLocaleDateString('es-CL')+' · '+format(min,1)+'–'+format(max,1)+' '+rows[0][2],5,65)};choose.onchange=plot;plot();context.show('clima');panel.scrollIntoView({block:'nearest'})})
   }

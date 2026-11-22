@@ -16,4 +16,10 @@ body.ui-dark-v37 #filtersWorkspaceV39 label *{color:inherit!important}
 #climaVista button[aria-pressed=true]{box-shadow:inset 0 0 0 2px currentColor!important}
 .leaflet-climaEstaciones-pane .leaflet-interactive,.leaflet-climaEstaciones-pane .leaflet-marker-icon{pointer-events:auto!important;cursor:pointer}
 .leaflet-climaEstaciones-pane{z-index:695!important}.leaflet-tooltip-pane:has(.leaflet-tooltip){z-index:698}.clima-hit{display:grid;place-items:center}.clima-glass-dot{box-sizing:border-box;border-radius:50%;background:color-mix(in srgb,var(--tint) 48%,#e7f4f740);border:1px solid #ecf8fac2;box-shadow:0 1px 3px #13222b59,inset 0 1px 2px #fff9;backdrop-filter:blur(4px);pointer-events:none}#climaVista .clima-transport select{font:inherit;width:36px;padding:0}
+body:not(.bulletin-v39) #minimapV39{display:none!important}
+#legendV39:not(:has(#legendBodyV39>*)),#legendV39:has(#legendBodyV39:empty){display:none!important}
+#climaVista .clima-transport{align-items:stretch!important}
+#climaVista .clima-transport select{height:auto!important;align-self:stretch;box-sizing:border-box;margin:0;min-height:0}
+.leaflet-tooltip-pane{pointer-events:none}.leaflet-climaEstaciones-pane .leaflet-marker-icon{touch-action:manipulation}
+
 html,body,#map{height:100%;margin:0}body{font:13px system-ui;color:#1b3541}.tools{position:absolute;right:10px;top:10px;z-index:1100}.tools button{padding:8px 12px}#climaVista{position:absolute;top:10px;right:72px;z-index:1000;border-radius:8px;overflow:auto;background:#f3f7f9ed;box-shadow:0 2px 12px #2345}#climaVista header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px}#climaVista h2{font-size:15px;margin:0}.context-actions-v39{display:flex;gap:3px}.context-actions-v39 svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}.context-actions-v39 button{height:24px}.context-concealed-v39{opacity:0}.clima-fields{gap:3px}#status{position:absolute;bottom:24px;left:10px;background:white;z-index:1000}
