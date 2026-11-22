@@ -367,8 +367,24 @@ THE SOFTWARE.
   const lines=current.lines??=pressureLines(current.air),labels=[];
   function stroke(line,points,alpha,label){
    if(alpha<=0)return;c.globalAlpha=alpha;c.strokeStyle='#b9e3f4';c.lineWidth=1.2;c.beginPath();let anchor,score=Infinity;
-   points.forEach((point,i)=>{const p=map.latLngToContainerPoint(point);if(i)c.lineTo(p.x,p.y);else c.moveTo(p.x,p.y);
-    if(p.x>16&&p.y>12&&p.x<pressure.width-16&&p.y<pressure.height-12){const s=(p.x-pressure.width*.5)**2+(p.y-pressure.height*.5)**2;if(s<score){score=s;anchor=p}}});
+   const origin=map.containerPointToLayerPoint([0,0]).add(map.getPixelOrigin());
+   const path=points.map(point=>map.project(point).subtract(origin));
+   if(line.closed)path.pop(); // El grafo repite el primer vértice al cerrar.
+   if(path.length<2)return;
+   const first=path[0],last=path[path.length-1];
+   let start=line.closed?last.add(first).divideBy(2):first;
+   c.lineJoin='round';c.lineCap='round';c.moveTo(start.x,start.y);
+   for(let i=0;i<path.length;i++){
+    const control=path[i],next=path[(i+1)%path.length];
+    const end=!line.closed&&i===path.length-1?last:control.add(next).divideBy(2);
+    c.quadraticCurveTo(control.x,control.y,end.x,end.y);
+    const x=(start.x+2*control.x+end.x)/4,y=(start.y+2*control.y+end.y)/4;
+    if(x>16&&y>12&&x<pressure.width-16&&y<pressure.height-12){
+     const distance=(x-pressure.width*.5)**2+(y-pressure.height*.5)**2;
+     if(distance<score){score=distance;anchor={x,y}}
+    }
+    start=end;
+   }
    if(line.closed)c.closePath();c.stroke();if(label&&anchor)labels.push([anchor,line.level,alpha]);
   }
   const a=current.air,b=previous?.air;
@@ -379,7 +395,7 @@ THE SOFTWARE.
   const placed=[];for(const [p,v,alpha] of labels){if(placed.some(q=>Math.abs(p.x-q.x)<29&&Math.abs(p.y-q.y)<13))continue;placed.push(p);c.globalAlpha=alpha*.72;c.fillStyle='#c6e8fa';c.beginPath();c.roundRect(p.x-12,p.y-6,24,11,5);c.fill();c.fillStyle='#183344';c.fillText(v,p.x,p.y+2.5)}
   c.globalAlpha=1;
  }
- function paint(t){if(!current)return;const c=base.getContext('2d'),w=base.width,h=base.height;
+ function paint(t,drawPressure=true){if(!current)return;const c=base.getContext('2d'),w=base.width,h=base.height;
   if(current.id.startsWith('wind')){
   c.clearRect(0,0,w,h);if(previous?.texture&&t<1){c.globalAlpha=1-t;c.drawImage(previous.texture,0,0,w,h);c.globalCompositeOperation='lighter';c.globalAlpha=t}
   c.drawImage(current.texture,0,0,w,h);c.globalAlpha=1;c.globalCompositeOperation='source-over';
@@ -403,13 +419,13 @@ THE SOFTWARE.
   const dots=symbols.getContext('2d');dots.clearRect(0,0,w,h);
   if(previous?.marks&&t<1){dots.globalAlpha=1-t;dots.drawImage(previous.marks,0,0)}
   dots.globalAlpha=previous?t:1;if(current.marks)dots.drawImage(current.marks,0,0);dots.globalAlpha=1;
-  contours(t);
+  if(drawPressure)contours(t);
  }
  function animate(now){
   if(pane.hidden)return;anim=requestAnimationFrame(animate);if(!current||now-lastFrame<32)return;
   const dt=Math.min(65,now-lastFrame)/1000;lastFrame=now;
-  if(previous){const f=Math.min(1,(now-started)/duration);fraction=f;
-   if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
+  if(previous){const f=Math.max(0,Math.min(1,(now-started)/duration));fraction=f;
+   if(now-lastPaint>90||f===1){paint(fraction,false);lastPaint=now}contours(fraction);if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
   const wind=current.id.startsWith('wind');
   const wave=current.id==='wave';
