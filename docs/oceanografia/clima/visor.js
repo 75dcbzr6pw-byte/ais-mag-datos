@@ -240,6 +240,29 @@ THE SOFTWARE.
      donors[n]=donors[k];queue[tail++]=n;
     }
    }
+   // Refinar la conexión de los brazos angostos a la resolución de la costa.
+   const fineWest=-73.65,fineNorth=-52.32,spacing=coast.step;
+   const cols=Math.ceil(2.45/spacing),rows=Math.ceil(1.23/spacing);
+   const fine=new Int32Array(cols*rows),front=new Int32Array(fine.length);let end=0;
+   for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+    const lon=fineWest+i*spacing,lat=fineNorth-j*spacing,k=j*cols+i;
+    if(!isSea(lon,lat)){fine[k]=-1;continue}
+    const gx=Math.round((lon-west)/step),gy=Math.round((north-lat)/step);
+    if(Math.abs(west+gx*step-lon)>spacing*.51||Math.abs(north-gy*step-lat)>spacing*.51)continue;
+    const donor=donors[gy*width+gx];
+    if(donor>0){fine[k]=donor;front[end++]=k}
+   }
+   for(let head=0;head<end;head++){
+    const k=front[head],i=k%cols;
+    for(const n of [i?k-1:-1,i+1<cols?k+1:-1,k-cols,k+cols]){
+     if(n<0||n>=fine.length||fine[n]!==0)continue;
+     fine[n]=fine[k];front[end++]=n;
+    }
+   }
+   donors.interior=(lon,lat)=>{
+    const x=Math.round((lon-fineWest)/spacing),y=Math.round((fineNorth-lat)/spacing);
+    return x>=0&&x<cols&&y>=0&&y<rows?fine[y*cols+x]:0;
+   };
    if(coastalLookup.size>=2)coastalLookup.delete(coastalLookup.keys().next().value);
    coastalLookup.set(key,donors);
   }
@@ -247,7 +270,7 @@ THE SOFTWARE.
   return (lon,lat)=>{
    const x=Math.round((lon-west)/step),y=Math.round((north-lat)/step);
    if(x<0||x>=width||y<0||y>=height)return;
-   let source=sources[donors[y*width+x]-1],quality=1;
+   let source=sources[(donors.interior(lon,lat)||donors[y*width+x])-1],quality=1;
    if(!source&&(unresolvedChannel(state.id,lon,lat)||(state.id==='wave'&&unresolvedChannel('tide',lon,lat))))return;
    if(!source){
     // En ensenadas con una boca subpíxel, atribuir la estimación a su muestra marina vecina.
@@ -391,7 +414,7 @@ THE SOFTWARE.
   const wind=current.id.startsWith('wind');
   const wave=current.id==='wave';
   const [minimum,maximum]=wind||wave?style().range:[0,1];
-  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.965)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
+  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.89)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
   for(const p of particles){
    if(wave&&p[3]>.58)continue;
@@ -431,7 +454,7 @@ THE SOFTWARE.
     }
     c.globalAlpha=1;continue;
    }
-   const gain=wind?dt*(.38+.94*Math.pow(Math.min(1,magnitude/75),1.7)):dt*24*(.35+.85*Math.sqrt(ratio));
+   const gain=wind?dt*(.32+.42*Math.pow(Math.min(1,magnitude/75),1.7)):dt*24*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
    if(current.layer.key==='inner'){
@@ -443,8 +466,8 @@ THE SOFTWARE.
    }
    if(wind){
     // Un umbral fijo por partícula evita el parpadeo entre fotogramas.
-    if(!magnitude||p[3]>(.14+.56*intensity)*(1-.20*Math.max(0,(intensity-.7)/.3)))continue;
-    const tail=2.3+10*intensity*intensity;
+    if(!magnitude||p[3]>(.13+.39*intensity)*(1-.20*Math.max(0,(intensity-.7)/.3)))continue;
+    const tail=2+4*intensity*intensity;
     c.moveTo(x-tail*u/magnitude,y+tail*v/magnitude);
     c.lineTo(p[0],p[1]);
     continue;
