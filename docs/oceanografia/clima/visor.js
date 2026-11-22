@@ -51,6 +51,22 @@ THE SOFTWARE.
   for(const text of items){const b=document.createElement('button');button(b,text,text,text===selected);b.onclick=()=>onClick(text);group.append(b)}}
  function stop(){run++;playing=false;clearTimeout(timer);clearTimeout(scrubTimer);button(play,'▶','Reproducir')}
  function closeEditor(){editing=null;q('[data-editor]').hidden=true}
+ let bioOpen=false,argoOn=false;
+ const floats=L.layerGroup();
+ function showFloats(stamp){
+  floats.clearLayers();if(!argoOn)return;
+  const end=Date.parse(stamp.slice(0,10)),recent=new Map();
+  for(const row of bundle.argo||[]){
+   const [file,day]=row,date=Date.parse(day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6));
+   if(date>end||end-date>=30*86400000)continue;
+   const wmo=file.split('/')[1];if(!recent.has(wmo)||day>recent.get(wmo)[1])recent.set(wmo,row);
+  }
+  for(const [wmo,[file,day,lat,lon,agency]] of recent){
+   L.circleMarker([lat,lon],{radius:5,color:'#173c63',fillColor:'#80e4ff',fillOpacity:1,weight:2}).bindPopup('Argo '+wmo+' · '+agency+'<br>'+day.slice(6)+'-'+day.slice(4,6)+'-'+day.slice(0,4)+'<br><a target="_blank" rel="noopener" href="https://data-argo.ifremer.fr/dac/'+encodeURI(file)+'">Perfil GDAC</a>').addTo(floats);
+  }
+  floats.addTo(map);q('[data-argo]').title=recent.size+' boyas con perfil en los últimos 30 días';
+ }
+ function detailKey(l,stamps){return l.native&&stamps.every(t=>t>=l.native.start&&t<=l.native.end)?l.native.key:l.detail}
  function menu(){
   const views=layer().views[mode];if(!views[period])period=mode==='Actual'?(Object.keys(views).find(k=>k.endsWith(' h'))||'Día'):'Día';
   const line=timeline();index=line.findIndex(t=>t.stamps.some(s=>s.slice(0,10)===anchor.slice(0,10)));
@@ -59,12 +75,17 @@ THE SOFTWARE.
   q('[data-modes]').lastChild.title='Últimos 15 días del archivo regional y pronóstico disponible';
   options('[data-period]',Object.keys(views),period,v=>{stop();period=v;menu()});
   const fields=q('[data-fields]');fields.replaceChildren();
+  const choices=document.createElement('div');choices.style.cssText='grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap';
   for(const key of Object.keys(layers)){
-   if(key in bio){const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=checked.has(key);
+   if(key in bio){
+    if(key==='no3'){const b=document.createElement('button');b.textContent='Bioquímica ▾';b.setAttribute('aria-expanded',bioOpen);b.onclick=()=>{bioOpen=!bioOpen;choices.style.display=bioOpen?'flex':'none';b.setAttribute('aria-expanded',bioOpen)};fields.append(b)}
+    if(key==='po4'){const b=document.createElement('button');b.dataset.argo='';button(b,'Boyas Argo','Última posición con perfil en 30 días',argoOn);b.onclick=()=>{argoOn=!argoOn;b.setAttribute('aria-pressed',argoOn);showFloats(timeline()[index].stamps.at(-1))};fields.append(b)}
+    const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=checked.has(key);
     check.onchange=()=>{if(check.checked){checked.add(key);select(key)}else{checked.delete(key);select(id===key?[...checked].at(-1)||'wind':id)}};
-    label.append(check,layers[key].title);fields.append(label);
+    label.style.color=bio[key];label.append(check,layers[key].title);choices.append(label);
    }else{const b=document.createElement('button');button(b,layers[key].title,layers[key].title,key===id);b.onclick=()=>select(key);fields.append(b)}
   }
+  fields.append(choices);choices.style.display=bioOpen?'flex':'none';
   q('.motion').disabled=!layer().vector;slider.max=line.length-1;slider.value=index;
   legend();update(false);
  }
@@ -153,8 +174,9 @@ THE SOFTWARE.
   const ticket=++revision,t=timeline()[index],l=layer();anchor=t.stamps[0];slider.value=index;
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
-  if(pane.hidden)return;
-  const [field,outer,air,overlays,detail]=await Promise.all([average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].map(async k=>[k,await average(k,t.stamps)])),l.detail?average(l.detail,t.stamps):null]);
+  if(pane.hidden)return;showFloats(t.stamps.at(-1));
+  const detailName=detailKey(l,t.stamps);
+  const [field,outer,air,overlays,detail]=await Promise.all([average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].filter(k=>k!==id).map(async k=>[k,await average(k,t.stamps),detailKey(layers[k],t.stamps)?await average(detailKey(layers[k],t.stamps),t.stamps):null])),detailName?average(detailName,t.stamps):null]);
   if(ticket!==revision||pane.hidden)return;
   const was=current;current={id,field,outer,air,overlays,detail,layer:l};previous=smooth&&was?.id===id&&was.field&&field?was:null;
   pressureToggle.title=air?'Isobaras de presión · hPa':'Isobaras de presión · sin datos';
@@ -330,10 +352,19 @@ THE SOFTWARE.
   s.pixels=image.data;ctx.putImageData(image,0,0);return c;
  }
  function drawSymbols(){current.marks=null;if(!current.overlays.length)return;const marks=canvas();marks.width=base.width;marks.height=base.height;current.marks=marks;const ctx=marks.getContext('2d');
-  for(const [k,g] of current.overlays){if(!g)continue;const l=layers[k],off=Object.keys(bio).indexOf(k);ctx.fillStyle=bio[k];
-   for(let j=0;j<g.ny;j++)for(let i=0;i<g.nx;i++){const value=g.a[j*g.nx+i]*l.factor;if(!Number.isFinite(value))continue;
-    const pt=map.latLngToContainerPoint([g.y+g.dy*j,g.x+g.dx*i]);if(!isSea(g.x+g.dx*i,g.y+g.dy*j))continue;
-    ctx.beginPath();ctx.arc(pt.x+(off%2)*5,pt.y+Math.floor(off/2)*5,1+4*Math.sqrt(Math.max(0,Math.min(1,value/l.max))),0,2*Math.PI);ctx.fill()}}
+  for(const [key,field,detail] of current.overlays){if(!field&&!detail)continue;
+   const l=layers[key],state={id:key,layer:l,field,detail},step=4;
+   const raster=canvas();raster.width=Math.ceil(base.width/step);raster.height=Math.ceil(base.height/step);
+   const rc=raster.getContext('2d'),img=rc.createImageData(raster.width,raster.height);
+   const rgb=[1,3,5].map(i=>parseInt(bio[key].slice(i,i+2),16));
+   for(let y=0;y<raster.height;y++)for(let x=0;x<raster.width;x++){
+    const lon=lons[x*step],lat=lats[y*step];if(!isSea(lon,lat))continue;
+    const v=sample(state,lon,lat);if(v)img.data.set([...rgb,150*Math.sqrt(Math.min(1,Math.max(0,v[2]/l.max)))],4*(y*raster.width+x));
+   }
+   rc.putImageData(img,0,0);ctx.drawImage(raster,0,0,marks.width,marks.height);
+  }
+  ctx.globalCompositeOperation='destination-in';ctx.drawImage(waterMask(),0,0);
+
  }
  function pressureLines(field,prior,t=1){
   if(!field)return [];
@@ -525,7 +556,7 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  argoOn=false;floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
   if(open){
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
    window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
@@ -536,7 +567,7 @@ THE SOFTWARE.
  q('[data-min]').onclick=()=>context.minimize('clima');
  q('[data-close]').onclick=()=>{stop();closeEditor();context.close('clima');tool.setAttribute('aria-expanded','false')};
  q('[data-clear]').onclick=()=>{
-  stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
+  argoOn=false;floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
   id='wind';period=bundle.publicView?'6 h':'Día';mode=bundle.publicView?'Actual':'Histórico';anchor=bundle.publicView?sets.air.analysisEnd:'2026-01-01';moving=true;motionLabel();showPressure=true;pressureToggle.setAttribute('aria-pressed','true');menu()
  };
  d.addEventListener('pointerenter',()=>d.classList.remove('context-concealed-v39'));
