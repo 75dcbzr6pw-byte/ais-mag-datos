@@ -30,7 +30,8 @@ THE SOFTWARE.
  const pane=map.createPane('climaAmbiental');pane.style.cssText='z-index:350;pointer-events:none';pane.hidden=true;
  const canvas=()=>document.createElement('canvas');
  const base=canvas(),flow=canvas(),pressure=canvas(),symbols=canvas();
- for(const c of [base,flow,pressure,symbols]){c.style.position='absolute';pane.append(c)}
+ const tint=map.createPane("climaTinte");tint.style.cssText="z-index:349;pointer-events:none;mix-blend-mode:multiply";tint.hidden=true;base.style.position="absolute";tint.append(base);
+ for(const c of [flow,pressure,symbols]){c.style.position='absolute';pane.append(c)}
  const seaBits=bytes(coast.bits);
  function bytes(str){return Uint8Array.fromBase64?Uint8Array.fromBase64(str):Uint8Array.from(atob(str),s=>s.charCodeAt(0))}
  function isSea(lon,lat){if(!Number.isFinite(lon+lat))return false;const x=Math.round((lon-coast.west)/coast.step),y=Math.round((coast.north-lat)/coast.step);
@@ -291,7 +292,7 @@ THE SOFTWARE.
    const bin=Math.round(127*Math.max(0,Math.min(1,(s.values[k]-lo)/(hi-lo))));
    image.data.set(p[bin],k*4);if(s.estimated[k])image.data[k*4+3]*=s.estimated[k]===2&&((k%w+Math.floor(k/w))%5===0)?.28:.55;
   }
-  ctx.putImageData(image,0,0);return c;
+  s.pixels=image.data;ctx.putImageData(image,0,0);return c;
  }
  function drawSymbols(){current.marks=null;if(!current.overlays.length)return;const marks=canvas();marks.width=base.width;marks.height=base.height;current.marks=marks;const ctx=marks.getContext('2d');
   for(const [k,g] of current.overlays){if(!g)continue;const l=layers[k],off=Object.keys(bio).indexOf(k);ctx.fillStyle=bio[k];
@@ -344,8 +345,20 @@ THE SOFTWARE.
   c.globalAlpha=1;
  }
  function paint(t){if(!current)return;const c=base.getContext('2d'),w=base.width,h=base.height;
-  c.clearRect(0,0,w,h);if(previous?.texture&&t<1){c.globalAlpha=1-t;c.drawImage(previous.texture,0,0,w,h);c.globalCompositeOperation='lighter';c.globalAlpha=t}
-  c.drawImage(current.texture,0,0,w,h);c.globalAlpha=1;c.globalCompositeOperation='source-over';
+  let frame=current.texture;
+  if(previous?.pixels?.length===current.pixels.length && t<1){
+   const blend=current.blend??=canvas();
+   if(blend.width!==frame.width||blend.height!==frame.height){blend.width=frame.width;blend.height=frame.height}
+   const ctx=blend.getContext('2d'),image=current.blendImage??=ctx.createImageData(frame.width,frame.height);
+   const from=previous.pixels,to=current.pixels,out=image.data;
+   for(let k=0;k<out.length;k+=4){
+    const a=from[k+3]*(1-t),b=to[k+3]*t,total=a+b;
+    out[k+3]=total;
+    for(let ch=0;ch<3;ch++)out[k+ch]=total?(a*from[k+ch]+b*to[k+ch])/total:0;
+   }
+   ctx.putImageData(image,0,0);frame=blend;
+  }
+  c.globalCompositeOperation='copy';c.drawImage(frame,0,0,w,h);c.globalCompositeOperation='source-over';
   if(!current.id.startsWith('wind')){c.globalCompositeOperation='destination-in';c.drawImage(waterMask(),0,0);c.globalCompositeOperation='source-over'}
   const dots=symbols.getContext('2d');dots.clearRect(0,0,w,h);
   if(previous?.marks&&t<1){dots.globalAlpha=1-t;dots.drawImage(previous.marks,0,0)}
@@ -355,7 +368,7 @@ THE SOFTWARE.
  function animate(now){
   if(pane.hidden)return;anim=requestAnimationFrame(animate);if(!current||now-lastFrame<32)return;
   const dt=Math.min(65,now-lastFrame)/1000;lastFrame=now;
-  if(previous){const f=Math.min(1,(now-started)/duration);fraction=f;
+  if(previous){const f=Math.max(0,Math.min(1,(now-started)/duration));fraction=f;
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
@@ -373,7 +386,7 @@ THE SOFTWARE.
    const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*(.768+.55*Math.max(0,Math.min(1,(magnitude-45)/30)))*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
-   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
+   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else if(current.id.startsWith('wind')&&magnitude>0){const tail=Math.max(3,gain*magnitude);c.moveTo(p[0]-tail*u/magnitude,p[1]+tail*v/magnitude);c.lineTo(p[0],p[1])}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
   }c.stroke();
  }
  async function move(n,smooth=true){const next=Math.max(0,Math.min(timeline().length-1,index+n));if(next===index)return;index=next;await update(smooth)}
@@ -396,7 +409,7 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  stop();closeEditor();pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  stop();closeEditor();tint.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
   if(open){
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
    window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
