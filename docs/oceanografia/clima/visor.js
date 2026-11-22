@@ -42,7 +42,7 @@ THE SOFTWARE.
  if(bundle.publicView){mode='Actual';period='6 h'}
  let current=null,previous=null,started=0,fraction=1,moving=true,showPressure=true,editing=null;
  let lons=[],lats=[],particles=[],lastFrame=0,lastPaint=0;
- let hold=4200,duration=hold;const speed=document.createElement("select");speed.setAttribute("aria-label","Velocidad de reproducción");for(const n of [1,2,3,5])speed.add(new Option(n+"×",n));q(".clima-readout").prepend(speed);speed.onchange=()=>{hold=duration=4200/Number(speed.value)};const settings={},cache=new Map();
+ let hold=4200,duration=hold;const speed=document.createElement("select");speed.setAttribute("aria-label","Velocidad de reproducción");for(const n of [1,2,3,5])speed.add(new Option(n+"×",n));q(".clima-transport").append(speed);speed.onchange=()=>{hold=duration=4200/Number(speed.value)};const settings={},cache=new Map();
  const layer=()=>layers[id],timeline=()=>layer().views[mode][period];
  const marine=()=>id==='total'||id==='tide';
  const transportGlyphs={"Histórico": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-clock-history\" viewBox=\"0 0 16 16\">\n  <path d=\"M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z\"/>\n  <path d=\"M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z\"/>\n  <path d=\"M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5\"/>\n</svg>", "Actual": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-calendar-week\" viewBox=\"0 0 16 16\">\n  <path d=\"M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z\"/>\n  <path d=\"M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z\"/>\n</svg>", "◀◀": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-rewind-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2m7.729 1.055A.5.5 0 0 1 8 5.5v1.886l3.21-2.293A.5.5 0 0 1 12 5.5v5a.5.5 0 0 1-.79.407L8 8.614V10.5a.5.5 0 0 1-.79.407l-3.5-2.5a.5.5 0 0 1 0-.814l3.5-2.5a.5.5 0 0 1 .519-.038\"/>\n</svg>", "▶": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-play-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2m6.79-6.907A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z\"/>\n</svg>", "Ⅱ": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-pause-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2m6.25-7C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5m3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5\"/>\n</svg>", "▶▶": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-fast-forward-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2m4.271 1.055a.5.5 0 0 1 .52.038L8 7.386V5.5a.5.5 0 0 1 .79-.407l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 8 10.5V8.614l-3.21 2.293A.5.5 0 0 1 4 10.5v-5a.5.5 0 0 1 .271-.445\"/>\n</svg>", "≋": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm4.65 1.1a.65.65 0 0 1 .65-.65h6.4a.65.65 0 0 1 0 1.3H5.3a.65.65 0 0 1-.65-.65zm-1.15 2.9a.65.65 0 0 1 .65-.65h6.1a.65.65 0 0 1 0 1.3H4.15A.65.65 0 0 1 3.5 8zm1.8 2.9a.65.65 0 0 1 .65-.65h4.8a.65.65 0 0 1 0 1.3h-4.8a.65.65 0 0 1-.65-.65z\"/></svg>"};
@@ -54,7 +54,11 @@ THE SOFTWARE.
  let imageMode=false,mosaic=false;
  let bioOpen=false,argoOn=false;
  const stationPane=map.createPane('climaEstaciones');stationPane.style.cssText='pointer-events:none';stationPane.style.zIndex=String(Math.max(649,Number(map.getPane('rnaPointHitV52')&&getComputedStyle(map.getPane('rnaPointHitV52')).zIndex)||0)+1);
- const stationRenderer=L.svg({pane:'climaEstaciones',padding:.3});
+ function glassPoint(size,color){
+  return L.divIcon({className:'clima-hit',iconSize:[26,26],iconAnchor:[13,13],html:'<i class="clima-glass-dot" style="width:'+size+'px;height:'+size+'px;--tint:'+color+'"></i>'})
+ }
+ function detailBox(){let box=q('[data-estacion]');if(!box){box=document.createElement('section');box.dataset.estacion='';q('.clima-body').append(box)}context.show('clima');box.scrollIntoView({block:'nearest'});return box}
+
  const floats=L.layerGroup(),markers=new Map();let tracks=[],trackStart=0,lastBase='wind';
  function moveFloats(now){if(!argoOn||!tracks.length)return;
   const f=Math.min(1,Math.max(0,(now-trackStart)/duration)),t=f*f*(3-2*f);
@@ -74,7 +78,7 @@ THE SOFTWARE.
   for(const [wmo,m] of markers)if(!recent.has(wmo)){floats.removeLayer(m);markers.delete(wmo)}
   trackStart=performance.now();
   for(const [wmo,[file,day,lat,lon,agency]] of recent){
-   let m=markers.get(wmo);if(!m){m=L.circleMarker([lat,lon],{pane:'climaEstaciones',renderer:stationRenderer,bubblingMouseEvents:false,radius:5,color:'#173c63',fillColor:'#80e4ff',fillOpacity:1,weight:2}).addTo(floats);markers.set(wmo,m)}
+   let m=markers.get(wmo);if(!m){m=L.marker([lat,lon],{pane:'climaEstaciones',icon:glassPoint(11,'#9bb9c4'),title:'Boya Argo '+wmo}).addTo(floats);markers.set(wmo,m)}
    let target=[lat,lon];
    const next=following.get(wmo),start=dayTime(day),gap=next?dayTime(next[1])-start:Infinity;
    if(next&&gap<=30*86400000){
@@ -84,7 +88,8 @@ THE SOFTWARE.
    const reading=bundle.argoReadings?.[file],level=id==='salt'?2:id==='temp'?1:0,r=style().range;
    const near=reading&&level&&reading[0]<=10&&end-dayTime(day)<86400000;
    const col=near?palette()[Math.max(0,Math.min(127,Math.round(127*(reading[level]-r[0])/(r[1]-r[0]))))]:null;
-   m.setStyle({fillColor:col?'rgb('+col.slice(0,3).join(',')+')':'#80e4ff',radius:col?5:3});
+   const tint=col?'rgb('+col.slice(0,3).join(',')+')':'#9bb9c4';if(m.tint!==tint){m.setIcon(glassPoint(12,tint));m.tint=tint}
+
    if(m.profileFile===file)continue;
    m.profileFile=file;
    const obs=bundle.argoReadings?.[file];
@@ -92,7 +97,7 @@ THE SOFTWARE.
    const units={DOXY:['Oxígeno','µmol/kg'],CHLA:['Clorofila','mg/m³'],NITRATE:['Nitrato','µmol/kg'],PH_IN_SITU_TOTAL:['pH','']};
    const extra=Object.entries(bundle.argoBGC?.[file]||{}).map(([key,[depth,value]])=>'<br>'+units[key][0]+' '+format(value,3)+' '+units[key][1]+' a '+format(depth,1)+' dbar').join('');
    const html='Argo '+wmo+' · '+agency+'<br>'+day.slice(6)+'-'+day.slice(4,6)+'-'+day.slice(0,4)+' · posición reportada '+format(lat,3)+', '+format(lon,3)+'<br>Movimiento interpolado entre perfiles. <br>'+values+extra+'<br><a target="_blank" rel="noopener" href="https://data-argo.ifremer.fr/dac/'+encodeURI(file)+'">Perfil vertical GDAC</a>';
-   m.bindPopup(html,{className:"clima-popup"});m.bindTooltip("Argo "+wmo+" · "+(obs?format(obs[1],2)+" °C":"Sin lectura validada"));
+   m.bindPopup(html,{className:"clima-popup"});if(!m.stationClick){m.stationClick=()=>{detailBox().innerHTML=m.getPopup().getContent()};m.on("click",m.stationClick)}m.bindTooltip("Argo "+wmo+" · "+(obs?format(obs[1],2)+" °C":"Sin lectura validada"));
    if(m.compareProfile)m.off('popupopen',m.compareProfile);
    m.compareProfile=async()=>{
     const when=day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6);
@@ -118,7 +123,8 @@ THE SOFTWARE.
    const card=document.createElement('div');
    card.textContent='FLOW · '+(site.name==='S/N'?'Salida '+site.id:site.name)+' · Media histórica del mes '+(month+1)+': '+format(value,2)+' m³/s · Caudal simulado por VIC';
    if(site.id===12072)continue;
-   L.circleMarker([site.lat,site.lon],{pane:'climaEstaciones',renderer:stationRenderer,bubblingMouseEvents:false,radius:Math.min(6,2+Math.log1p(Math.max(0,value))),weight:1,color:'#14546a',fillColor:'#68dcf5',fillOpacity:.8}).bindTooltip(card.textContent).bindPopup(card,{className:"clima-popup"}).addTo(riverGroup)
+   L.marker([site.lat,site.lon],{pane:'climaEstaciones',title:'FLOW · '+site.id,icon:glassPoint(9,'#7eafb7')}).bindTooltip(card.textContent).on('click',()=>detailBox().replaceChildren(card)).addTo(riverGroup)
+
   }
  }
  const metGroup=L.layerGroup();
@@ -128,6 +134,7 @@ THE SOFTWARE.
   if(!metOn){metGroup.remove();return}
   metGroup.addTo(map);
   const end=Date.parse(stamp.length===10?stamp+'T23:59:59Z':stamp.slice(0,13)+':00Z');
+  const occupied=[];
   for(const site of bundle.redmet||[]){
    const values={};
    for(const day of site.days)for(const [key,reading] of Object.entries(day)){
@@ -139,7 +146,10 @@ THE SOFTWARE.
    const speed=values.WindSpeed, fresh=speed&&end-speed[0]<86400000, kmh=fresh?speed[1]*3.6:null;
    const range=id.startsWith('wind')?style().range:[0,75],scaled=fresh?Math.max(0,Math.min(127,Math.round(127*(kmh-range[0])/(range[1]-range[0])))):null;
    const bg=scaled===null?'#426271':id.startsWith('wind')?'rgb('+palette()[scaled].slice(0,3).join(',')+')':['#244c7d','#257e91','#37964c','#a0a442','#c17848','#b74862'][Math.min(5,Math.floor(scaled*6/128))];
-   const icon=L.divIcon({className:'',iconSize:[32,16],iconAnchor:[16,8],html:'<span style="display:inline-flex;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;background:'+bg+';font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(fresh?Math.round(kmh):'—')+'</span>'});
+   const screen=map.latLngToLayerPoint([site.lat,site.lon]);let offset=0;
+   while(occupied.some(p=>Math.abs(p.x-screen.x)<35&&Math.abs(p.y-screen.y-offset)<18))offset+=20;
+   occupied.push({x:screen.x,y:screen.y+offset});
+   const icon=L.divIcon({className:'',iconSize:[32,16],iconAnchor:[16,8-offset],html:'<span style="display:inline-flex;align-items:center;gap:3px;border-radius:8px;font-size:10px;padding:1px 3px;color:white;border:1px solid #ffffff8c;backdrop-filter:blur(5px);background:color-mix(in srgb,'+bg+' 35%,#26384199);font-weight:bold"><b style="transform:rotate('+(hasWind?direction[1]+180:0)+'deg)">'+symbol+'</b>'+(fresh?Math.round(kmh):'—')+'</span>'});
    const marker=L.marker([site.lat,site.lon],{icon,pane:'climaEstaciones',title:(site.source||'REDMET')+' · '+site.name}).addTo(metGroup);
    const card=document.createElement('div'),title=document.createElement('strong');title.textContent=(site.source||'REDMET')+' · '+site.name+(site.source==='DMC'?' · Hora del resumen UTC':'');card.append(title);
    const labels={WindDirection:'Viento desde',WindSpeed:'Viento',GustSpeed:'Ráfaga',Temperature:'Temperatura del aire',RH:'Humedad relativa',Rain:'Precipitación',Pressure:'Presión',DewPoint:'Punto de rocío',SolarRadiation:'Radiación solar',PAR:'Radiación PAR'};
