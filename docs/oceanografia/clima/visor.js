@@ -160,7 +160,7 @@ THE SOFTWARE.
   const weatherSource=projected?(first>sets.air.analysisEnd?'Pronóstico GFS':'Análisis y pronóstico GFS')+' · emisión '+sets.air.cycle.slice(0,13).replace('T',' ')+':00 UTC':last<=lastERA?'ERA5':first>lastERA?'NOAA GFS · análisis':'ERA5 y NOAA GFS';
   const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
-  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período');
+  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level'].includes(id)?' · Otway–Skyring: transparente donde la grilla carece de cobertura local. Costa ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
   size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
@@ -176,10 +176,15 @@ THE SOFTWARE.
   const c=water.getContext('2d'),img=c.createImageData(water.width,water.height);
   for(let j=0;j<water.height;j++)for(let i=0;i<water.width;i++)if(isSea(lons[i],lats[j]))img.data[(j*water.width+i)*4+3]=255;
   c.putImageData(img,0,0);return water}
+ // En los canales de Riesco una celda vecina puede pertenecer a otra cuenca.
+ function unresolvedChannel(id,lon,lat){
+  return (id==='tide'||id==='total'||id==='level')&&lon>=-73.65&&lon<=-71.2&&lat>=-53.45&&lat<=-52.32;
+ }
  function sample(state,lon,lat,g){
   const l=state.layer,sea=l.key==='inner',f=state.field;if(!g)g=state.detail||f||state.outer;if(!g)return;
   const inside=(p)=>{const i=(lon-p.x)/p.dx,j=(lat-p.y)/p.dy;return i>=0&&i<p.nx-1&&j>=0&&j<p.ny-1};
   const fallback=()=>g===state.detail&&f?sample(state,lon,lat,f):g!==state.outer&&state.outer?sample(state,lon,lat,state.outer):undefined;
+  if(g===state.outer&&unresolvedChannel(state.id,lon,lat))return;
   if(!inside(g))return fallback();
   if(sea&&!isSea(lon,lat))return;
   const x=(lon-g.x)/g.dx,y=(lat-g.y)/g.dy,i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j;
@@ -192,7 +197,7 @@ THE SOFTWARE.
    if(vector){u+=g.a[l.channels[0]*g.n+k]*w;v+=g.a[l.channels[1]*g.n+k]*w}
   }
   add(i,j,(1-fx)*(1-fy));add(i+1,j,fx*(1-fy));add(i,j+1,(1-fx)*fy);add(i+1,j+1,fx*fy);
-  if(!weight&&sea)for(let b=-1;b<=2;b++)for(let a=-1;a<=2;a++){const dist=(a-fx)**2+(b-fy)**2;if(dist>0&&dist<=2.25)add(i+a,j+b,1/dist)}
+  if(!weight&&sea&&!unresolvedChannel(state.id,lon,lat))for(let b=-1;b<=2;b++)for(let a=-1;a<=2;a++){const dist=(a-fx)**2+(b-fy)**2;if(dist>0&&dist<=2.25)add(i+a,j+b,1/dist)}
   if(weight)return [u*l.factor/weight,v*l.factor/weight,mag*l.factor/weight];
   return fallback();
  }
@@ -268,7 +273,7 @@ THE SOFTWARE.
    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const k=y*w+x,lon=lons[x*step],lat=lats[y*step];
     if(ocean&&!isSea(lon,lat))continue;
-    eligible[k]=1;const val=sample(s,lon,lat);if(!val)continue;
+    eligible[k]=unresolvedChannel(s.id,lon,lat)?0:1;const val=sample(s,lon,lat);if(!val)continue;
     s.values[k]=val[2];s.velocity[k*2]=val[0];s.velocity[k*2+1]=val[1];queue[tail++]=k;
    }
    if(ocean)for(let head=0;head<tail;head++){
