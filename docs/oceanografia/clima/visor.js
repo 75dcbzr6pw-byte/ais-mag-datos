@@ -130,10 +130,13 @@ THE SOFTWARE.
   const set=sets[key],n=set.x.length*set.y.length,ids=stamps.filter(t=>(t.includes('T')?set.recent:set.days)?.[t]);
   if(!ids.length)return null;
   const token=[key,ids[0],ids.at(-1),ids.length].join('|');if(cache.has(token))return cache.get(token);
-  const promise=(async()=>{let sums;const count=new Uint8Array(n);
-   for(const t of ids){const a=await decoded((t.includes('T')?set.recent:set.days)[t]);sums??=new Float32Array(a.length);
-    for(let j=0;j<n;j++){if(a[j]===-32768)continue;count[j]++;for(let k=j;k<a.length;k+=n)sums[k]+=a[k]}}
-   for(let j=0;j<n;j++)for(let k=j;k<sums.length;k+=n)sums[k]=count[j]?sums[k]/count[j]:NaN;
+  const promise=(async()=>{let sums,count;
+   for(const t of ids){
+    const a=await decoded((t.includes('T')?set.recent:set.days)[t]);
+    sums??=new Float32Array(a.length);count??=new Uint16Array(a.length);
+    for(let k=0;k<a.length;k++)if(a[k]!==-32768){sums[k]+=a[k];count[k]++}
+   }
+   for(let k=0;k<sums.length;k++)sums[k]=count[k]?sums[k]/count[k]:NaN;
    return {a:sums,n,nx:set.x.length,ny:set.y.length,x:set.x[0],y:set.y[0],dx:set.x[1]-set.x[0],dy:set.y[1]-set.y[0],count:ids.length};
   })();cache.set(token,promise);if(cache.size>16)cache.delete(cache.keys().next().value);return promise;
  }
@@ -193,6 +196,7 @@ THE SOFTWARE.
    const k=b*g.nx+a,scalar=g.a[l.channels.at(-1)*g.n+k];if(!Number.isFinite(scalar))return;
    if(!state.id.startsWith('wind')){const dx=g.x+a*g.dx-lon,dy=g.y+b*g.dy-lat,steps=Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/coast.step);
     for(let z=1;z<=steps;z++)if(!isSea(lon+dx*z/steps,lat+dy*z/steps))return}
+   if(vector&&(!Number.isFinite(g.a[l.channels[0]*g.n+k])||!Number.isFinite(g.a[l.channels[1]*g.n+k])))return;
    weight+=w;mag+=scalar*w;
    if(vector){u+=g.a[l.channels[0]*g.n+k]*w;v+=g.a[l.channels[1]*g.n+k]*w}
   }
@@ -396,11 +400,18 @@ THE SOFTWARE.
      const speed=before+(after-before)*fraction;u=speed*Math.cos(angle);v=speed*Math.sin(angle);
     }else{u=a+(u-a)*fraction;v=b+(v-b)*fraction}
    }
-   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
+   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u+v)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
    const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),intensity=Math.min(1,Math.max(0,(magnitude-minimum)/(maximum-minimum||1)));
    const gain=wind?dt*(.38+.94*Math.pow(Math.min(1,magnitude/75),1.7)):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
+   if(current.layer.key==='inner'){
+    const lon=lons[Math.floor(x)],lat=lats[Math.floor(y)];
+    // Mar abierto: agua en los cuatro puntos de una vecindad de unos 10 km.
+    const dx=.09/Math.cos(lat*Math.PI/180);
+    const offshore=isSea(lon-dx,lat)&&isSea(lon+dx,lat)&&isSea(lon,lat-.09)&&isSea(lon,lat+.09);
+    if(p[3]>(offshore?.42:.80))continue;
+   }
    if(wind){
     // Un umbral fijo por partícula evita el parpadeo entre fotogramas.
     if(!magnitude||p[3]>.14+.56*intensity)continue;
