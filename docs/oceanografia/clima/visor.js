@@ -24,7 +24,7 @@ THE SOFTWARE.
  */
  const {sets,layers,coast}=bundle;
  const d=document.createElement('section');d.id='climaVista';d.className='workspace-panel-v39';d.hidden=true;
- d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div data-modes class="clima-modes"></div><div class="clima-bar"><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16"><path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267" /></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div></div><div data-marks></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><label>Modo de fusión <select data-blend><option value="normal">Normal</option><option value="multiply">Multiplicar</option><option value="screen">Trama</option><option value="overlay">Superponer</option><option value="darken">Oscurecer</option><option value="lighten">Aclarar</option><option value="soft-light">Luz suave</option><option value="hard-light">Luz fuerte</option><option value="color-dodge">Sobreexponer color</option><option value="color-burn">Subexponer color</option><option value="difference">Diferencia</option><option value="exclusion">Exclusión</option><option value="hue">Tono</option><option value="saturation">Saturación</option><option value="color">Color</option><option value="luminosity">Luminosidad</option></select></label><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
+ d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div data-modes class="clima-modes"></div><div class="clima-bar"><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2.2 3.1a.55.55 0 0 1 .55-.55h10.5a.55.55 0 0 1 0 1.1h-.55l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.55a.55.55 0 0 1-.55-.55z"/></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div></div><div data-marks></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><label>Modo de fusión <select data-blend><option value="normal">Normal</option><option value="multiply">Multiplicar</option><option value="screen">Trama</option><option value="overlay">Superponer</option><option value="darken">Oscurecer</option><option value="lighten">Aclarar</option><option value="soft-light">Luz suave</option><option value="hard-light">Luz fuerte</option><option value="color-dodge">Sobreexponer color</option><option value="color-burn">Subexponer color</option><option value="difference">Diferencia</option><option value="exclusion">Exclusión</option><option value="hue">Tono</option><option value="saturation">Saturación</option><option value="color">Color</option><option value="luminosity">Luminosidad</option></select></label><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
  const q=s=>d.querySelector(s),slider=q('.clima-time input'),play=q('[data-play]');
  const bio={no3:'#df7452',po4:'#9164d9',si:'#279aaa',chl:'#58a442'},checked=new Set();
  const pane=map.createPane('climaAmbiental');pane.style.cssText='z-index:350;pointer-events:none';pane.hidden=true;
@@ -45,12 +45,13 @@ THE SOFTWARE.
  const hold=4200,duration=hold,settings={},cache=new Map();
  const layer=()=>layers[id],timeline=()=>layer().views[mode][period];
  const marine=()=>id==='total'||id==='tide';
- const transportGlyphs={'◀◀':'<path d="M12 4 3 12l9 8zm9 0-9 8 9 8z"/>','▶▶':'<path d="m3 4 9 8-9 8zm9 0 9 8-9 8z"/>','▶':'<path d="m6 3 14 9-14 9z"/>','Ⅱ':'<path d="M6 4h4v16H6zm8 0h4v16h-4z"/>','≋':'<path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M2 7c7-8 11 8 20 0M2 12c7-8 11 8 20 0M2 17c7-8 11 8 20 0"/>'};
- function button(el,icon,title,active){if(transportGlyphs[icon])el.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'+transportGlyphs[icon]+'</svg>';else el.textContent=icon;el.title=title;el.setAttribute('aria-label',title);if(active!=null)el.setAttribute('aria-pressed',String(active))}
+ const transportGlyphs={"Histórico": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-clock-history\" viewBox=\"0 0 16 16\">\n  <path d=\"M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z\"/>\n  <path d=\"M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z\"/>\n  <path d=\"M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5\"/>\n</svg>", "Actual": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-calendar-week\" viewBox=\"0 0 16 16\">\n  <path d=\"M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z\"/>\n  <path d=\"M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z\"/>\n</svg>", "◀◀": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-rewind-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2m7.729 1.055A.5.5 0 0 1 8 5.5v1.886l3.21-2.293A.5.5 0 0 1 12 5.5v5a.5.5 0 0 1-.79.407L8 8.614V10.5a.5.5 0 0 1-.79.407l-3.5-2.5a.5.5 0 0 1 0-.814l3.5-2.5a.5.5 0 0 1 .519-.038\"/>\n</svg>", "▶": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-play-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2m6.79-6.907A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z\"/>\n</svg>", "Ⅱ": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-pause-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2m6.25-7C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5m3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5\"/>\n</svg>", "▶▶": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-fast-forward-btn-fill\" viewBox=\"0 0 16 16\">\n  <path d=\"M0 4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2m4.271 1.055a.5.5 0 0 1 .52.038L8 7.386V5.5a.5.5 0 0 1 .79-.407l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 8 10.5V8.614l-3.21 2.293A.5.5 0 0 1 4 10.5v-5a.5.5 0 0 1 .271-.445\"/>\n</svg>", "≋": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm4.65 1.1a.65.65 0 0 1 .65-.65h6.4a.65.65 0 0 1 0 1.3H5.3a.65.65 0 0 1-.65-.65zm-1.15 2.9a.65.65 0 0 1 .65-.65h6.1a.65.65 0 0 1 0 1.3H4.15A.65.65 0 0 1 3.5 8zm1.8 2.9a.65.65 0 0 1 .65-.65h4.8a.65.65 0 0 1 0 1.3h-4.8a.65.65 0 0 1-.65-.65z\"/></svg>"};
+ function button(el,icon,title,active){if(transportGlyphs[icon])el.innerHTML=transportGlyphs[icon];else el.textContent=icon;el.title=title;el.setAttribute('aria-label',title);if(active!=null)el.setAttribute('aria-pressed',String(active))}
  function options(host,items,selected,onClick){const group=q(host);group.replaceChildren();
   for(const text of items){const b=document.createElement('button');button(b,text,text,text===selected);b.onclick=()=>onClick(text);group.append(b)}}
  function stop(){run++;playing=false;clearTimeout(timer);clearTimeout(scrubTimer);button(play,'▶','Reproducir')}
  function closeEditor(){editing=null;q('[data-editor]').hidden=true}
+ let imageMode=false,mosaic=false;
  let bioOpen=false,argoOn=false;
  const floats=L.layerGroup();
  function showFloats(stamp){
@@ -68,28 +69,32 @@ THE SOFTWARE.
  }
  function detailKey(l,stamps){return l.native&&stamps.every(t=>t>=l.native.start&&t<=l.native.end)?l.native.key:l.detail}
  function menu(){
-  const views=layer().views[mode];if(!views[period])period=mode==='Actual'?(Object.keys(views).find(k=>k.endsWith(' h'))||'Día'):'Día';
+  const views=layer().views[mode];if(id==='chl'&&imageMode)period='Imágenes';if(!views[period])period=mode==='Actual'?(Object.keys(views).find(k=>k.endsWith(' h'))||'Día'):'Día';
   const line=timeline();index=line.findIndex(t=>t.stamps.some(s=>s.slice(0,10)===anchor.slice(0,10)));
   if(index<0)index=anchor<line[0].stamps[0]?0:line.length-1;
   options('[data-modes]',Object.keys(layer().views),mode,v=>{stop();closeEditor();mode=v;period=v==='Actual'?(Object.keys(layer().views.Actual).find(k=>k.endsWith(' h'))||'Día'):'Día';anchor=layer().views[v][period][0].stamps[0];menu()});
   q('[data-modes]').lastChild.title='Últimos 15 días del archivo regional y pronóstico disponible';
-  options('[data-period]',Object.keys(views),period,v=>{stop();period=v;menu()});
+  const hourly=Object.keys(views).find(k=>k.endsWith(' h'));
+  options('[data-period]',['Mes','Semana','Día','Hora'],period.endsWith(' h')?'Hora':period,v=>{stop();imageMode=false;period=v==='Hora'?hourly:v;menu()});
+  const hour=q('[data-period]').lastChild;hour.disabled=!hourly;hour.title=hourly?'Lecturas cada '+hourly:'Sin lecturas intradiarias en esta vista';
   const fields=q('[data-fields]');fields.replaceChildren();
   const choices=document.createElement('div');choices.style.cssText='grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap';
   for(const key of Object.keys(layers)){
    if(key in bio){
-    if(key==='no3'){const b=document.createElement('button');b.textContent='Bioquímica ▾';b.setAttribute('aria-expanded',bioOpen);b.onclick=()=>{bioOpen=!bioOpen;choices.style.display=bioOpen?'flex':'none';b.setAttribute('aria-expanded',bioOpen)};fields.append(b)}
-    if(key==='po4'){const b=document.createElement('button');b.dataset.argo='';button(b,'Boyas Argo','Última posición con perfil en 30 días',argoOn);b.onclick=()=>{argoOn=!argoOn;b.setAttribute('aria-pressed',argoOn);showFloats(timeline()[index].stamps.at(-1))};fields.append(b)}
+    if(key==='no3'){const b=document.createElement('button');b.textContent='Bio';b.setAttribute('aria-expanded',bioOpen);b.onclick=()=>{bioOpen=!bioOpen;choices.style.display=bioOpen?'flex':'none';b.setAttribute('aria-expanded',bioOpen)};fields.append(b)}
+    if(key==='po4'){const b=document.createElement('button');b.dataset.argo='';button(b,'Boyas','Última posición con perfil en 30 días',argoOn);b.onclick=()=>{argoOn=!argoOn;b.setAttribute('aria-pressed',argoOn);showFloats(timeline()[index].stamps.at(-1))};fields.append(b)}
     const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=checked.has(key);
     check.onchange=()=>{if(check.checked){checked.add(key);select(key)}else{checked.delete(key);select(id===key?[...checked].at(-1)||'wind':id)}};
     label.style.color=bio[key];label.append(check,layers[key].title);choices.append(label);
    }else{const b=document.createElement('button');button(b,layers[key].title,layers[key].title,key===id);b.onclick=()=>select(key);fields.append(b)}
   }
+  if(id==='chl'){const controls=document.createElement('div');controls.style.gridColumn='1/-1';
+   for(const [title,rolling] of [['Imagen a imagen',false],['Últimas 10 imágenes',true]]){const b=document.createElement('button');button(b,title,title,imageMode&&mosaic===rolling);b.onclick=()=>{stop();imageMode=true;mosaic=rolling;menu()};controls.append(b)}fields.append(controls)}
   fields.append(choices);choices.style.display=bioOpen?'flex':'none';
   q('.motion').disabled=!layer().vector;slider.max=line.length-1;slider.value=index;
   legend();update(false);
  }
- function select(key){stop();closeEditor();id=key;menu()}
+ function select(key){stop();closeEditor();id=key;imageMode=key==='chl';menu()}
  const format=(n,dec=1)=>n.toLocaleString('es-CL',{maximumFractionDigits:dec});
  function style(){return settings[id]??={blend:'normal',range:[layer().min,marine()?Math.round(layer().max*1.94384)/1.94384:layer().max],colors:['#244c7d','#b74862'],alpha:id.startsWith('wind')?[15,55]:[65,78]}}
  function hue(rgb){const [r,g,b]=rgb.map(v=>v/255),hi=Math.max(r,g,b),lo=Math.min(r,g,b),c=hi-lo,l=(hi+lo)/2;
@@ -145,17 +150,17 @@ THE SOFTWARE.
    const text=date.toLocaleDateString('es-CL',mode==='Histórico'?{month:'short'}:{month:'short',day:'numeric'});ctx.fillText(text,Math.min(w-28,x(i)),h-1);const s=document.createElement('span');s.textContent=text;marks.append(s)}
  }
  async function decoded(raw){const stream=new Blob([bytes(raw)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return new Int16Array(await new Response(stream).arrayBuffer())}
- async function average(key,stamps){
+ async function average(key,stamps,latest=false){
   if(key==='air'&&mode==='Histórico')stamps=stamps.filter(t=>t.slice(0,10)<=sets.air.analysisEnd);
   if(bundle.loadDays)await bundle.loadDays(stamps);
   const set=sets[key],n=set.x.length*set.y.length,ids=stamps.filter(t=>(t.includes('T')?set.recent:set.days)?.[t]);
   if(!ids.length)return null;
-  const token=[key,ids[0],ids.at(-1),ids.length].join('|');if(cache.has(token))return cache.get(token);
+  const token=[latest,key,ids[0],ids.at(-1),ids.length].join('|');if(cache.has(token))return cache.get(token);
   const promise=(async()=>{let sums,count;
    for(const t of ids){
     const a=await decoded((t.includes('T')?set.recent:set.days)[t]);
     sums??=new Float32Array(a.length);count??=new Uint16Array(a.length);
-    for(let k=0;k<a.length;k++)if(a[k]!==-32768){sums[k]+=a[k];count[k]++}
+    for(let k=0;k<a.length;k++)if(a[k]!==-32768){if(latest){sums[k]=a[k];count[k]=1}else{sums[k]+=a[k];count[k]++}}
    }
    for(let k=0;k<sums.length;k++)sums[k]=count[k]?sums[k]/count[k]:NaN;
    return {a:sums,n,nx:set.x.length,ny:set.y.length,x:set.x[0],y:set.y[0],dx:set.x[1]-set.x[0],dy:set.y[1]-set.y[0],count:ids.length};
@@ -175,8 +180,9 @@ THE SOFTWARE.
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
   if(pane.hidden)return;showFloats(t.stamps.at(-1));
-  const detailName=detailKey(l,t.stamps);
-  const [field,outer,air,overlays,detail]=await Promise.all([average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].filter(k=>k!==id).map(async k=>[k,await average(k,t.stamps),detailKey(layers[k],t.stamps)?await average(detailKey(layers[k],t.stamps),t.stamps):null])),detailName?average(detailName,t.stamps):null]);
+  const images=id==='chl'&&period==='Imágenes',frames=images&&mosaic?timeline().slice(Math.max(0,index-9),index+1).map(row=>row.key):t.stamps;
+  const detailName=images?null:detailKey(l,t.stamps);
+  const [field,outer,air,overlays,detail]=await Promise.all([images?average('chlNative',frames,mosaic):average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].filter(k=>k!==id).map(async k=>[k,await average(k,t.stamps),detailKey(layers[k],t.stamps)?await average(detailKey(layers[k],t.stamps),t.stamps):null])),detailName?average(detailName,t.stamps):null]);
   if(ticket!==revision||pane.hidden)return;
   const was=current;current={id,field,outer,air,overlays,detail,layer:l};previous=smooth&&was?.id===id&&was.field&&field?was:null;
   pressureToggle.title=air?'Isobaras de presión · hPa':'Isobaras de presión · sin datos';
@@ -185,7 +191,7 @@ THE SOFTWARE.
   const weatherSource=projected?(first>sets.air.analysisEnd?'Pronóstico GFS':'Análisis y pronóstico GFS')+' · emisión '+sets.air.cycle.slice(0,13).replace('T',' ')+':00 UTC':last<=lastERA?'ERA5':first>lastERA?'NOAA GFS · análisis':'ERA5 y NOAA GFS';
   const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
-  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level','wave'].includes(id)?' · Costa de Otway–Skyring ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
+  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(images?(mosaic?'Último dato válido · ':'Imagen diaria · '):'')+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level','wave'].includes(id)?' · Costa de Otway–Skyring ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
   size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
@@ -326,7 +332,7 @@ THE SOFTWARE.
     eligible[k]=1;const val=sample(s,lon,lat);if(!val)continue;
     s.values[k]=val[2];s.velocity[k*2]=val[0];s.velocity[k*2+1]=val[1];queue[tail++]=k;
    }
-   if(ocean)for(let head=0;head<tail;head++){
+   if(ocean&&!(s.id==='chl'&&period==='Imágenes'))for(let head=0;head<tail;head++){
     const k=queue[head],x=k%w,y=Math.floor(k/w);
     for(const n of [x>0?k-1:-1,x+1<w?k+1:-1,y>0?k-w:-1,y+1<h?k+w:-1]){
      if(n<0||!eligible[n]||Number.isFinite(s.values[n]))continue;
@@ -336,7 +342,7 @@ THE SOFTWARE.
      s.estimated[n]=1;queue[tail++]=n;
     }
    }
-   if(ocean){
+   if(ocean&&!(s.id==='chl'&&period==='Imágenes')){
     let lookup;
     for(let k=0;k<eligible.length;k++)if(eligible[k]&&!Number.isFinite(s.values[k])){
      lookup??=regionalDonors(s);if(!lookup)break;
@@ -437,10 +443,25 @@ THE SOFTWARE.
    if(blend.width!==frame.width||blend.height!==frame.height){blend.width=frame.width;blend.height=frame.height}
    const ctx=blend.getContext('2d'),image=current.blendImage??=ctx.createImageData(frame.width,frame.height);
    const from=previous.pixels,to=current.pixels,out=image.data;
+   const fw=frame.width,fh=frame.height,morph=current.id==='chl'&&period==='Imágenes'&&!mosaic;
+   if(morph&&!current.flowShift){
+    const displacement=current.flowShift=new Float32Array(fw*fh*2),A=previous.values,B=current.values;
+    for(let y=1;y<fh-1;y++)for(let x=1;x<fw-1;x++){
+     const k=y*fw+x,gx=(A[k+1]-A[k-1]+B[k+1]-B[k-1])/4,gy=(A[k+fw]-A[k-fw]+B[k+fw]-B[k-fw])/4;
+     const change=A[k]-B[k],den=gx*gx+gy*gy+.0025;
+     if(Number.isFinite(change+den)){const factor=Math.min(1,2*Math.sqrt(den)/(Math.abs(change)+1e-6))*change/den;displacement[k*2]=factor*gx;displacement[k*2+1]=factor*gy}
+    }
+   }
    for(let k=0;k<out.length;k+=4){
-    const a=from[k+3]*(1-t),b=to[k+3]*t,total=a+b;
+    let src=k,dst=k;
+    if(morph&&from[k+3]&&to[k+3]){
+     const x=(k/4)%fw,y=Math.floor(k/4/fw),dx=current.flowShift[k/2],dy=current.flowShift[k/2+1];
+     const at=f=>4*(Math.max(0,Math.min(fh-1,y+Math.round(f*dy)))*fw+Math.max(0,Math.min(fw-1,x+Math.round(f*dx))));
+     const old=at(-t),next=at(1-t);if(from[old+3]&&to[next+3]){src=old;dst=next}
+    }
+    const a=from[src+3]*(1-t),b=to[dst+3]*t,total=a+b;
     out[k+3]=total;
-    for(let ch=0;ch<3;ch++)out[k+ch]=total?(a*from[k+ch]+b*to[k+ch])/total:0;
+    for(let ch=0;ch<3;ch++)out[k+ch]=total?(a*from[src+ch]+b*to[dst+ch])/total:0;
    }
    ctx.putImageData(image,0,0);frame=blend;
   }
@@ -535,7 +556,7 @@ THE SOFTWARE.
  for(const [attr,n,icon,title] of [['prev',-1,'◀◀','Período anterior'],['next',1,'▶▶','Período siguiente']]){
   const b=q('[data-'+attr+']');button(b,icon,title);b.onclick=()=>{stop();move(n)}}
  slider.oninput=()=>{stop();const i=+slider.value,smooth=Math.abs(i-index)===1;index=i;revision++;scrubTimer=setTimeout(()=>update(smooth),60)};
- function motionLabel(){button(q('.motion'),'≋',moving?'Pausar partículas':'Animar partículas',moving);q('.motion').innerHTML='<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-braces-asterisk" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.114 8.063V7.9c1.005-.102 1.497-.615 1.497-1.6V4.503c0-1.094.39-1.538 1.354-1.538h.273V2h-.376C2.25 2 1.49 2.759 1.49 4.352v1.524c0 1.094-.376 1.456-1.49 1.456v1.299c1.114 0 1.49.362 1.49 1.456v1.524c0 1.593.759 2.352 2.372 2.352h.376v-.964h-.273c-.964 0-1.354-.444-1.354-1.538V9.663c0-.984-.492-1.497-1.497-1.6M14.886 7.9v.164c-1.005.103-1.497.616-1.497 1.6v1.798c0 1.094-.39 1.538-1.354 1.538h-.273v.964h.376c1.613 0 2.372-.759 2.372-2.352v-1.524c0-1.094.376-1.456 1.49-1.456v-1.3c-1.114 0-1.49-.362-1.49-1.456V4.352C14.51 2.759 13.75 2 12.138 2h-.376v.964h.273c.964 0 1.354.444 1.354 1.538V6.3c0 .984.492 1.497 1.497 1.6M7.5 11.5V9.207l-1.621 1.621-.707-.707L6.792 8.5H4.5v-1h2.293L5.172 5.879l.707-.707L7.5 6.792V4.5h1v2.293l1.621-1.621.707.707L9.208 7.5H11.5v1H9.207l1.621 1.621-.707.707L8.5 9.208V11.5z" /></svg>'}motionLabel();
+ function motionLabel(){button(q('.motion'),'≋',moving?'Pausar partículas':'Animar partículas',moving)}motionLabel();
  q('.motion').onclick=()=>{moving=!moving;motionLabel();if(!moving)flow.getContext('2d').clearRect(0,0,flow.width,flow.height)};
  const pressureToggle=q('.isobars');pressureToggle.onclick=()=>{showPressure=!showPressure;pressureToggle.setAttribute('aria-pressed',String(showPressure));contours(fraction)};
  // El rumbo indica hacia dónde se desplaza el agua en el instante seleccionado.
