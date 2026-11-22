@@ -301,7 +301,7 @@ THE SOFTWARE.
    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const k=y*w+x,lon=lons[x*step],lat=lats[y*step];
     if(ocean&&!isSea(lon,lat))continue;
-    eligible[k]=s.id==='level'&&unresolvedChannel(s.id,lon,lat)?0:1;const val=sample(s,lon,lat);if(!val)continue;
+    eligible[k]=1;const val=sample(s,lon,lat);if(!val)continue;
     s.values[k]=val[2];s.velocity[k*2]=val[0];s.velocity[k*2+1]=val[1];queue[tail++]=k;
    }
    if(ocean)for(let head=0;head<tail;head++){
