@@ -30,7 +30,7 @@ THE SOFTWARE.
  const pane=map.createPane('climaAmbiental');pane.style.cssText='z-index:350;pointer-events:none';pane.hidden=true;
  const canvas=()=>document.createElement('canvas');
  const base=canvas(),flow=canvas(),pressure=canvas(),symbols=canvas();
- const tint=map.createPane("climaTinte");tint.style.cssText="z-index:349;pointer-events:none;mix-blend-mode:multiply";tint.hidden=true;base.style.position="absolute";tint.append(base);
+ const tint=map.createPane("climaTinte");tint.style.cssText="z-index:349;pointer-events:none";tint.hidden=true;base.style.position="absolute";tint.append(base);
  for(const c of [flow,pressure,symbols]){c.style.position='absolute';pane.append(c)}
  const seaBits=bytes(coast.bits);
  function bytes(str){return Uint8Array.fromBase64?Uint8Array.fromBase64(str):Uint8Array.from(atob(str),s=>s.charCodeAt(0))}
@@ -371,9 +371,11 @@ THE SOFTWARE.
   if(previous){const f=Math.max(0,Math.min(1,(now-started)/duration));fraction=f;
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
-  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
+  const wind=current.id.startsWith('wind');
+  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':wind?'rgba(0,0,0,.88)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
-  for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
+  const count=wind?Math.ceil(particles.length/2):particles.length;
+  for(let i=0;i<count;i++){const p=particles[i],x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
    let u=current.velocity[k],v=current.velocity[k+1];
    if(previous&&Number.isFinite(previous.velocity[k])&&Number.isFinite(u)){
     const a=previous.velocity[k],b=previous.velocity[k+1],before=Math.hypot(a,b),after=Math.hypot(u,v);
@@ -386,7 +388,7 @@ THE SOFTWARE.
    const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),gain=current.id.startsWith('wind')?dt*(.768+.55*Math.max(0,Math.min(1,(magnitude-45)/30)))*Math.expm1(3*Math.min(1,magnitude/75))/Math.expm1(3):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
-   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else if(current.id.startsWith('wind')&&magnitude>0){const tail=Math.max(3,gain*magnitude);c.moveTo(p[0]-tail*u/magnitude,p[1]+tail*v/magnitude);c.lineTo(p[0],p[1])}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
+   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else if(current.id.startsWith('wind')&&magnitude>0){const tail=Math.max(2,gain*magnitude);c.moveTo(p[0]-tail*u/magnitude,p[1]+tail*v/magnitude);c.lineTo(p[0],p[1])}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
   }c.stroke();
  }
  async function move(n,smooth=true){const next=Math.max(0,Math.min(timeline().length-1,index+n));if(next===index)return;index=next;await update(smooth)}
