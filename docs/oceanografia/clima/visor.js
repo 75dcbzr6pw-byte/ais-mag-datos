@@ -388,10 +388,13 @@ THE SOFTWARE.
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
   const wind=current.id.startsWith('wind');
-  const [minimum,maximum]=wind?style().range:[0,1];
+  const wave=current.id==='wave';
+  const [minimum,maximum]=wind||wave?style().range:[0,1];
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.965)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
-  for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
+  for(const p of particles){
+   if(wave&&p[3]>.38)continue;
+   const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
    let u=current.velocity[k],v=current.velocity[k+1];
    if(previous&&Number.isFinite(previous.velocity[k])&&Number.isFinite(u)){
     const a=previous.velocity[k],b=previous.velocity[k+1],before=Math.hypot(a,b),after=Math.hypot(u,v);
@@ -400,9 +403,31 @@ THE SOFTWARE.
      const speed=before+(after-before)*fraction;u=speed*Math.cos(angle);v=speed*Math.sin(angle);
     }else{u=a+(u-a)*fraction;v=b+(v-b)*fraction}
    }
-   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u+v)||p[2]<=0||(!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;continue}
+   if(x<0||x>=w||y<0||y>=h||!Number.isFinite(u+v)||p[2]<=0||(!wave&&!playing&&--p[2]<=0)){p[0]=Math.random()*w;p[1]=Math.random()*h;p[2]=65+Math.random()*55;p.waveAge=0;continue}
    const magnitude=Math.hypot(u,v),ratio=Math.min(2,magnitude/current.layer.max),intensity=Math.min(1,Math.max(0,(magnitude-minimum)/(maximum-minimum||1)));
-   const gain=wind?dt*(.38+.94*Math.pow(Math.min(1,magnitude/75),1.7)):dt*(current.id==='wave'?1.8:24)*(.35+.85*Math.sqrt(ratio));
+   if(wave){
+    const cell=k/2;
+    let height=current.values[cell];
+    if(previous&&Number.isFinite(previous.values[cell]))height=previous.values[cell]+fraction*(height-previous.values[cell]);
+    if(!(magnitude>.01&&height>0)){p[2]=0;continue}
+    const strength=Math.max(0,Math.min(1,(height-minimum)/(maximum-minimum||1)));
+    const speed=5+30*strength**1.35,life=4.8+2*strength;
+    p.waveAge=(p.waveAge??Math.random()*life)+dt;
+    const age=p.waveAge/life;
+    if(age>=1){p[2]=0;continue}
+    const dx=u/magnitude,dy=-v/magnitude;
+    p[0]+=dt*speed*dx;p[1]+=dt*speed*dy;
+    const tail=Math.min(speed*p.waveAge,1+11*strength);
+    for(let j=2;j>=0;j--){
+     const back=tail*j/2,cx=p[0]-dx*back,cy=p[1]-dy*back;
+     const half=3+5*Math.max(0,age-back/(speed*life));
+     c.globalAlpha=Math.min(1,(1-age)*4)*[1,.33,.13][j];
+     c.beginPath();c.moveTo(cx+dy*half,cy-dx*half);
+     c.quadraticCurveTo(cx+dx*1.5,cy+dy*1.5,cx-dy*half,cy+dx*half);c.stroke();
+    }
+    c.globalAlpha=1;continue;
+   }
+   const gain=wind?dt*(.38+.94*Math.pow(Math.min(1,magnitude/75),1.7)):dt*24*(.35+.85*Math.sqrt(ratio));
    p[0]+=gain*u;p[1]-=gain*v;
    if(current.layer.key==='inner'&&(!isSea(lons[Math.floor(x)],lats[Math.floor(y)])||!isSea(lons[Math.floor(p[0])],lats[Math.floor(p[1])]))){p[2]=0;continue}
    if(current.layer.key==='inner'){
@@ -420,8 +445,10 @@ THE SOFTWARE.
     c.lineTo(p[0],p[1]);
     continue;
    }
-   if(current.id==='wave'){if(magnitude<.01)continue;const half=3;c.moveTo(p[0]-half*v/magnitude,p[1]-half*u/magnitude);c.quadraticCurveTo(p[0]+1.5*u/magnitude,p[1]-1.5*v/magnitude,p[0]+half*v/magnitude,p[1]+half*u/magnitude)}else{c.moveTo(x,y);c.lineTo(p[0],p[1])}
-  }c.stroke();
+   c.moveTo(x,y);c.lineTo(p[0],p[1]);
+  }
+  if(wave){c.globalCompositeOperation='destination-in';c.drawImage(waterMask(),0,0);c.globalCompositeOperation='source-over'}
+  else c.stroke();
  }
  async function move(n,smooth=true){const next=Math.max(0,Math.min(timeline().length-1,index+n));if(next===index)return;index=next;await update(smooth)}
  async function advance(token){
