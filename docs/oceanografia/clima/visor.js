@@ -101,6 +101,46 @@ THE SOFTWARE.
   }
   floats.addTo(map);q('[data-argo]').title=recent.size+' boyas con perfil en los últimos 30 días';
  }
+ const riverGroup=L.layerGroup();let riverOn=false;
+ function drawRivers(stamp){
+  riverGroup.clearLayers();riverGroup.remove();
+  if(!riverOn)return;
+  riverGroup.addTo(map);
+  const month=Number(stamp.slice(5,7))-1;
+  for(const site of bundle.flow||[]){
+   const value=site.monthly[month];if(!Number.isFinite(value))continue;
+   const card=document.createElement('div');
+   card.textContent='FLOW · '+(site.name==='S/N'?'Salida '+site.id:site.name)+' · Media histórica del mes '+(month+1)+': '+format(value,2)+' m³/s · Caudal simulado por VIC';
+   L.circleMarker([site.lat,site.lon],{radius:Math.min(9,3+Math.log1p(Math.max(0,value))),weight:1,color:'#14546a',fillColor:'#68dcf5',fillOpacity:.8}).bindPopup(card).addTo(riverGroup)
+  }
+ }
+ const metGroup=L.layerGroup();
+ let metOn=false;
+ function drawMet(stamp){
+  metGroup.clearLayers();
+  if(!metOn){metGroup.remove();return}
+  metGroup.addTo(map);
+  const end=Date.parse(stamp.length===10?stamp+'T23:59:59Z':stamp.slice(0,13)+':00Z');
+  for(const site of bundle.redmet||[]){
+   const values={};
+   for(const day of site.days)for(const [key,reading] of Object.entries(day)){
+    if(reading[0]<=end&&(!values[key]||reading[0]>values[key][0]))values[key]=reading;
+   }
+   const direction=values.WindDirection;
+   const hasWind=direction&&end-direction[0]<86400000&&Number.isFinite(direction[1]);
+   const symbol=hasWind?'↑':'●';
+   const icon=L.divIcon({className:'',iconSize:[22,22],iconAnchor:[11,11],html:'<span style="display:grid;place-items:center;border:1px solid #37556a;border-radius:100%;background:#fff;color:#173c63;width:20px;height:20px;font:bold 16px sans-serif;transform:rotate('+(hasWind?(direction[1]+180):0)+'deg)">'+symbol+'</span>'});
+   const marker=L.marker([site.lat,site.lon],{icon,title:'REDMET · '+site.name}).addTo(metGroup);
+   const card=document.createElement('div'),title=document.createElement('strong');title.textContent='REDMET · '+site.name;card.append(title);
+   const labels={WindDirection:'Viento desde',WindSpeed:'Viento',GustSpeed:'Ráfaga',Temperature:'Temperatura del aire',RH:'Humedad relativa',Rain:'Precipitación',Pressure:'Presión',DewPoint:'Punto de rocío',SolarRadiation:'Radiación solar',PAR:'Radiación PAR'};
+   for(const [key,[time,value,unit]] of Object.entries(values)){
+    const d=new Date(time).toISOString(),line=document.createElement('div');
+    line.textContent=(labels[key]||key)+' · '+format(value,2)+' '+unit+' · '+d.slice(8,10)+'-'+d.slice(5,7)+'-'+d.slice(0,4)+' '+d.slice(11,16)+' UTC';card.append(line)
+   }
+   if(!Object.keys(values).length)card.append(document.createElement('br'),'Sin lectura archivada para esta fecha');
+   marker.bindPopup(card)
+  }
+ }
  function detailKey(l,stamps){return l.native&&stamps.every(t=>t>=l.native.start&&t<=l.native.end)?l.native.key:l.detail}
  function menu(){
   const views=layer().views[mode];if(id==='chl'&&imageMode)period='Imágenes';if(!views[period])period=mode==='Actual'?(Object.keys(views).find(k=>k.endsWith(' h'))||'Día'):'Día';
@@ -123,6 +163,10 @@ THE SOFTWARE.
     label.style.color=bio[key];label.append(check,layers[key].title);choices.append(label);
    }else{const b=document.createElement('button');button(b,layers[key].title,layers[key].title,key===id);b.onclick=()=>select(key);fields.append(b)}
   }
+  const rivers=document.createElement('button');button(rivers,'FLOW','Caudal medio histórico del mes en desembocaduras',riverOn);
+  rivers.onclick=()=>{riverOn=!riverOn;rivers.setAttribute('aria-pressed',String(riverOn));drawRivers(timeline()[index].stamps.at(-1))};fields.append(rivers);
+  const met=document.createElement('button');button(met,'REDMET','Estaciones meteorológicas REDMET',metOn);
+  met.onclick=()=>{metOn=!metOn;met.setAttribute('aria-pressed',String(metOn));drawMet(timeline()[index].stamps.at(-1))};fields.append(met);
   if(id==='chl'){const controls=document.createElement('div');controls.style.gridColumn='1/-1';
    for(const [title,rolling] of [['Imagen a imagen',false],['Últimas 10 imágenes',true]]){const b=document.createElement('button');button(b,title,title,imageMode&&mosaic===rolling);b.onclick=()=>{stop();imageMode=true;mosaic=rolling;menu()};controls.append(b)}fields.append(controls)}
   fields.append(choices);choices.style.display=bioOpen?'flex':'none';
@@ -214,7 +258,7 @@ THE SOFTWARE.
   const ticket=++revision,t=timeline()[index],l=layer();anchor=t.stamps[0];slider.value=index;
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
-  if(pane.hidden)return;showFloats(t.stamps.at(-1),smooth);
+  if(pane.hidden)return;showFloats(t.stamps.at(-1),smooth);drawMet(t.stamps.at(-1));drawRivers(t.stamps.at(-1));
   const images=id==='chl'&&period==='Imágenes',frames=images&&mosaic?timeline().slice(Math.max(0,index-9),index+1).map(row=>row.key):t.stamps;
   const bioDates=[...new Set(t.stamps.map(stamp=>stamp.slice(0,10)))];
   const detailName=images?null:detailKey(l,t.stamps);
@@ -619,7 +663,7 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  argoOn=false;showFloats();floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  riverOn=false;drawRivers();metOn=false;drawMet();argoOn=false;showFloats();floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
   if(open){
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
    window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
@@ -630,7 +674,7 @@ THE SOFTWARE.
  q('[data-min]').onclick=()=>context.minimize('clima');
  q('[data-close]').onclick=()=>{stop();closeEditor();context.close('clima');tool.setAttribute('aria-expanded','false')};
  q('[data-clear]').onclick=()=>{
-  argoOn=false;showFloats();floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
+  riverOn=false;drawRivers();metOn=false;drawMet();argoOn=false;showFloats();floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
   id='wind';period=bundle.publicView?'6 h':'Día';mode=bundle.publicView?'Actual':'Histórico';anchor=bundle.publicView?sets.air.analysisEnd:'2026-01-01';moving=true;motionLabel();showPressure=true;pressureToggle.setAttribute('aria-pressed','true');menu()
  };
  d.addEventListener('pointerenter',()=>d.classList.remove('context-concealed-v39'));
