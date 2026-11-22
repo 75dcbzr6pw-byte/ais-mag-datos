@@ -163,7 +163,7 @@ THE SOFTWARE.
   const weatherSource=projected?(first>sets.air.analysisEnd?'Pronóstico GFS':'Análisis y pronóstico GFS')+' · emisión '+sets.air.cycle.slice(0,13).replace('T',' ')+':00 UTC':last<=lastERA?'ERA5':first>lastERA?'NOAA GFS · análisis':'ERA5 y NOAA GFS';
   const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
-  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level'].includes(id)?' · Otway–Skyring: transparente donde la grilla carece de cobertura local. Costa ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
+  q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level','wave'].includes(id)?' · Costa de Otway–Skyring ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
   size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
@@ -248,6 +248,7 @@ THE SOFTWARE.
    const x=Math.round((lon-west)/step),y=Math.round((north-lat)/step);
    if(x<0||x>=width||y<0||y>=height)return;
    let source=sources[donors[y*width+x]-1],quality=1;
+   if(!source&&(unresolvedChannel(state.id,lon,lat)||(state.id==='wave'&&unresolvedChannel('tide',lon,lat))))return;
    if(!source){
     // En ensenadas con una boca subpíxel, atribuir la estimación a su muestra marina vecina.
     const key=x+'/'+y;quality=2;
@@ -277,7 +278,7 @@ THE SOFTWARE.
    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const k=y*w+x,lon=lons[x*step],lat=lats[y*step];
     if(ocean&&!isSea(lon,lat))continue;
-    eligible[k]=unresolvedChannel(s.id,lon,lat)?0:1;const val=sample(s,lon,lat);if(!val)continue;
+    eligible[k]=s.id==='level'&&unresolvedChannel(s.id,lon,lat)?0:1;const val=sample(s,lon,lat);if(!val)continue;
     s.values[k]=val[2];s.velocity[k*2]=val[0];s.velocity[k*2+1]=val[1];queue[tail++]=k;
    }
    if(ocean)for(let head=0;head<tail;head++){
@@ -393,7 +394,7 @@ THE SOFTWARE.
   const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.965)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
   for(const p of particles){
-   if(wave&&p[3]>.38)continue;
+   if(wave&&p[3]>.58)continue;
    const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
    let u=current.velocity[k],v=current.velocity[k+1];
    if(previous&&Number.isFinite(previous.velocity[k])&&Number.isFinite(u)){
@@ -411,16 +412,19 @@ THE SOFTWARE.
     if(previous&&Number.isFinite(previous.values[cell]))height=previous.values[cell]+fraction*(height-previous.values[cell]);
     if(!(magnitude>.01&&height>0)){p[2]=0;continue}
     const strength=Math.max(0,Math.min(1,(height-minimum)/(maximum-minimum||1)));
+    const red=Math.max(0,(strength-.65)/.35);
+    const visible=p[3]<=.38+.20*red;
     const speed=5+30*strength**1.35,life=4.8+2*strength;
     p.waveAge=(p.waveAge??Math.random()*life)+dt;
     const age=p.waveAge/life;
     if(age>=1){p[2]=0;continue}
     const dx=u/magnitude,dy=-v/magnitude;
     p[0]+=dt*speed*dx;p[1]+=dt*speed*dy;
-    const tail=Math.min(speed*p.waveAge,1+11*strength);
+    if(!visible)continue;
+    const tail=Math.min(speed*p.waveAge,(1+11*strength)*(1-.35*red));
     for(let j=2;j>=0;j--){
      const back=tail*j/2,cx=p[0]-dx*back,cy=p[1]-dy*back;
-     const half=3+5*Math.max(0,age-back/(speed*life));
+     const half=3+5*(1-.45*red)*Math.max(0,age-back/(speed*life));
      c.globalAlpha=Math.min(1,(1-age)*4)*[1,.33,.13][j];
      c.beginPath();c.moveTo(cx+dy*half,cy-dx*half);
      c.quadraticCurveTo(cx+dx*1.5,cy+dy*1.5,cx-dy*half,cy+dx*half);c.stroke();
@@ -439,7 +443,7 @@ THE SOFTWARE.
    }
    if(wind){
     // Un umbral fijo por partícula evita el parpadeo entre fotogramas.
-    if(!magnitude||p[3]>.14+.56*intensity)continue;
+    if(!magnitude||p[3]>(.14+.56*intensity)*(1-.20*Math.max(0,(intensity-.7)/.3)))continue;
     const tail=2.3+10*intensity*intensity;
     c.moveTo(x-tail*u/magnitude,y+tail*v/magnitude);
     c.lineTo(p[0],p[1]);
@@ -464,6 +468,18 @@ THE SOFTWARE.
  function motionLabel(){button(q('.motion'),'≋',moving?'Pausar partículas':'Animar partículas',moving);q('.motion').innerHTML='<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-braces-asterisk" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.114 8.063V7.9c1.005-.102 1.497-.615 1.497-1.6V4.503c0-1.094.39-1.538 1.354-1.538h.273V2h-.376C2.25 2 1.49 2.759 1.49 4.352v1.524c0 1.094-.376 1.456-1.49 1.456v1.299c1.114 0 1.49.362 1.49 1.456v1.524c0 1.593.759 2.352 2.372 2.352h.376v-.964h-.273c-.964 0-1.354-.444-1.354-1.538V9.663c0-.984-.492-1.497-1.497-1.6M14.886 7.9v.164c-1.005.103-1.497.616-1.497 1.6v1.798c0 1.094-.39 1.538-1.354 1.538h-.273v.964h.376c1.613 0 2.372-.759 2.372-2.352v-1.524c0-1.094.376-1.456 1.49-1.456v-1.3c-1.114 0-1.49-.362-1.49-1.456V4.352C14.51 2.759 13.75 2 12.138 2h-.376v.964h.273c.964 0 1.354.444 1.354 1.538V6.3c0 .984.492 1.497 1.497 1.6M7.5 11.5V9.207l-1.621 1.621-.707-.707L6.792 8.5H4.5v-1h2.293L5.172 5.879l.707-.707L7.5 6.792V4.5h1v2.293l1.621-1.621.707.707L9.208 7.5H11.5v1H9.207l1.621 1.621-.707.707L8.5 9.208V11.5z" /></svg>'}motionLabel();
  q('.motion').onclick=()=>{moving=!moving;motionLabel();if(!moving)flow.getContext('2d').clearRect(0,0,flow.width,flow.height)};
  const pressureToggle=q('.isobars');pressureToggle.onclick=()=>{showPressure=!showPressure;pressureToggle.setAttribute('aria-pressed',String(showPressure));contours(fraction)};
+ // El rumbo indica hacia dónde se desplaza el agua en el instante seleccionado.
+ map.on('click',e=>{
+  if(pane.hidden||!current||!marine()||current.id!==id||!isSea(e.latlng.lng,e.latlng.lat))return;
+  const point=map.latLngToContainerPoint(e.latlng),col=Math.floor(point.x/4),row=Math.floor(point.y/4);
+  if(col<0||col>=current.width||row<0)return;
+  const k=row*current.width+col,u=current.velocity[k*2],v=current.velocity[k*2+1];
+  const speed=Math.hypot(u,v),bearing=(Math.atan2(u,v)*180/Math.PI+360)%360;
+  const compass=['N','NE','E','SE','S','SO','O','NO'];
+  const reading=Number.isFinite(speed)?(speed<.001?'Sin dirección definida':('Hacia '+compass[Math.round(bearing/45)%8]+' · '+Math.round(bearing)%360+'° · '+format(speed,2)+' m/s')):'Sin cobertura';
+  const origin=Number.isFinite(speed)?(current.estimated[k]?'Estimación espacial':'Modelo local'):'';
+  L.popup().setLatLng(e.latlng).setContent([layer().title,reading,origin,q('.clima-readout output').textContent].filter(Boolean).join('<br>')).openOn(map);
+ });
  function redraw(){if(!current||pane.hidden)return;size();previous=null;current.texture=texture(current);drawSymbols();paint(1)}
  const context=window.__CONTEXT_MENUS_V39;
  context.panels.clima=d;
