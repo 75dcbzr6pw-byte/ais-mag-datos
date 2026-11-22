@@ -53,17 +53,51 @@ THE SOFTWARE.
  function closeEditor(){editing=null;q('[data-editor]').hidden=true}
  let imageMode=false,mosaic=false;
  let bioOpen=false,argoOn=false;
- const floats=L.layerGroup();
- function showFloats(stamp){
-  floats.clearLayers();if(!argoOn)return;
-  const end=Date.parse(stamp.slice(0,10)),recent=new Map();
+ const floats=L.layerGroup(),markers=new Map();let tracks=[],trackStart=0,lastBase='wind';
+ function moveFloats(now){if(!argoOn||!tracks.length)return;
+  const f=Math.min(1,Math.max(0,(now-trackStart)/duration)),t=f*f*(3-2*f);
+  for(const [m,a,b] of tracks)m.setLatLng([a.lat+(b[0]-a.lat)*t,a.lng+(b[1]-a.lng)*t]);
+  if(f===1)tracks=[];
+ }
+ function showFloats(stamp,smooth=false){
+  tracks=[];if(!argoOn){floats.clearLayers();markers.clear();return}
+  const end=Date.parse(stamp.length===13?stamp+':00Z':stamp.slice(0,10)),recent=new Map(),following=new Map();
+  const dayTime=day=>Date.parse(day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6));
   for(const row of bundle.argo||[]){
-   const [file,day]=row,date=Date.parse(day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6));
-   if(date>end||end-date>=30*86400000)continue;
-   const wmo=file.split('/')[1];if(!recent.has(wmo)||day>recent.get(wmo)[1])recent.set(wmo,row);
+   const [file,day]=row,date=dayTime(day),wmo=file.split('/')[1];
+   if(date>end){if(!following.has(wmo)||day<following.get(wmo)[1])following.set(wmo,row);continue}
+   if(end-date>=30*86400000)continue;
+   if(!recent.has(wmo)||day>recent.get(wmo)[1])recent.set(wmo,row);
   }
+  for(const [wmo,m] of markers)if(!recent.has(wmo)){floats.removeLayer(m);markers.delete(wmo)}
+  trackStart=performance.now();
   for(const [wmo,[file,day,lat,lon,agency]] of recent){
-   L.circleMarker([lat,lon],{radius:5,color:'#173c63',fillColor:'#80e4ff',fillOpacity:1,weight:2}).bindPopup('Argo '+wmo+' · '+agency+'<br>'+day.slice(6)+'-'+day.slice(4,6)+'-'+day.slice(0,4)+'<br><a target="_blank" rel="noopener" href="https://data-argo.ifremer.fr/dac/'+encodeURI(file)+'">Perfil GDAC</a>').addTo(floats);
+   let m=markers.get(wmo);if(!m){m=L.circleMarker([lat,lon],{radius:5,color:'#173c63',fillColor:'#80e4ff',fillOpacity:1,weight:2}).addTo(floats);markers.set(wmo,m)}
+   let target=[lat,lon];
+   const next=following.get(wmo),start=dayTime(day),gap=next?dayTime(next[1])-start:Infinity;
+   if(next&&gap<=30*86400000){
+    const t=(end-start)/gap;target=[lat+(next[2]-lat)*t,lon+(next[3]-lon)*t];
+   }
+   const a=m.getLatLng();if(smooth&&(a.lat!==target[0]||a.lng!==target[1]))tracks.push([m,a,target]);else m.setLatLng(target);
+   if(m.profileFile===file)continue;
+   m.profileFile=file;
+   const obs=bundle.argoReadings?.[file];
+   const values=obs?'Lectura válida más somera · '+format(obs[0],1)+' dbar<br>Temperatura: '+format(obs[1],2)+' °C · Salinidad: '+format(obs[2],3)+' PSU':'Sin lectura de contraste validada';
+   const units={DOXY:['Oxígeno','µmol/kg'],CHLA:['Clorofila','mg/m³'],NITRATE:['Nitrato','µmol/kg'],PH_IN_SITU_TOTAL:['pH','']};
+   const extra=Object.entries(bundle.argoBGC?.[file]||{}).map(([key,[depth,value]])=>'<br>'+units[key][0]+' '+format(value,3)+' '+units[key][1]+' a '+format(depth,1)+' dbar').join('');
+   const html='Argo '+wmo+' · '+agency+'<br>'+day.slice(6)+'-'+day.slice(4,6)+'-'+day.slice(0,4)+' · posición reportada '+format(lat,3)+', '+format(lon,3)+'<br>Movimiento interpolado entre perfiles. <br>'+values+extra+'<br><a target="_blank" rel="noopener" href="https://data-argo.ifremer.fr/dac/'+encodeURI(file)+'">Perfil vertical GDAC</a>';
+   m.bindPopup(html);
+   if(m.compareProfile)m.off('popupopen',m.compareProfile);
+   m.compareProfile=async()=>{
+    const when=day.slice(0,4)+'-'+day.slice(4,6)+'-'+day.slice(6);
+    const values=await Promise.all(['temp','salt'].map(async key=>{
+     const f=await average(layers[key].key,[when]);if(!f)return;
+     const v=sample({id:key,layer:layers[key],field:f},lon,lat);
+     if(v)return layers[key].title+' '+format(v[2],2)+' '+layers[key].unit;
+    }));
+    if(m.isPopupOpen()&&m.getPopup().getContent()===html)m.setPopupContent(html+'<br>Modelo superficial del día: '+(values.filter(Boolean).join(' · ')||'sin cobertura'));
+   };m.on('popupopen',m.compareProfile);
+
   }
   floats.addTo(map);q('[data-argo]').title=recent.size+' boyas con perfil en los últimos 30 días';
  }
@@ -79,12 +113,13 @@ THE SOFTWARE.
   const hour=q('[data-period]').lastChild;hour.disabled=!hourly;hour.title=hourly?'Lecturas cada '+hourly:'Sin lecturas intradiarias en esta vista';
   const fields=q('[data-fields]');fields.replaceChildren();
   const choices=document.createElement('div');choices.style.cssText='grid-column:1/-1;display:flex;gap:4px;flex-wrap:wrap';
+  const clearBio=document.createElement('button');clearBio.textContent='Desactivar Bio';clearBio.disabled=!checked.size;clearBio.onclick=()=>{checked.clear();bioOpen=false;select(id in bio?lastBase:id)};choices.append(clearBio);
   for(const key of Object.keys(layers)){
    if(key in bio){
-    if(key==='no3'){const b=document.createElement('button');b.textContent='Bio';b.setAttribute('aria-expanded',bioOpen);b.onclick=()=>{bioOpen=!bioOpen;choices.style.display=bioOpen?'flex':'none';b.setAttribute('aria-expanded',bioOpen)};fields.append(b)}
+    if(key==='no3'){const b=document.createElement('button');b.textContent='Bio';b.setAttribute('aria-pressed',String(checked.size>0));b.setAttribute('aria-expanded',bioOpen);b.onclick=()=>{bioOpen=!bioOpen;choices.style.display=bioOpen?'flex':'none';b.setAttribute('aria-expanded',bioOpen)};fields.append(b)}
     if(key==='po4'){const b=document.createElement('button');b.dataset.argo='';button(b,'Boyas','Última posición con perfil en 30 días',argoOn);b.onclick=()=>{argoOn=!argoOn;b.setAttribute('aria-pressed',argoOn);showFloats(timeline()[index].stamps.at(-1))};fields.append(b)}
     const label=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.checked=checked.has(key);
-    check.onchange=()=>{if(check.checked){checked.add(key);select(key)}else{checked.delete(key);select(id===key?[...checked].at(-1)||'wind':id)}};
+    check.onchange=()=>{if(check.checked){checked.add(key);select(id==='mixed'?id:key)}else{checked.delete(key);select(id===key?[...checked].at(-1)||lastBase:id)}};
     label.style.color=bio[key];label.append(check,layers[key].title);choices.append(label);
    }else{const b=document.createElement('button');button(b,layers[key].title,layers[key].title,key===id);b.onclick=()=>select(key);fields.append(b)}
   }
@@ -94,7 +129,7 @@ THE SOFTWARE.
   q('.motion').disabled=!layer().vector;slider.max=line.length-1;slider.value=index;
   legend();update(false);
  }
- function select(key){stop();closeEditor();id=key;imageMode=key==='chl';menu()}
+ function select(key){stop();closeEditor();if(!(key in bio))lastBase=key;id=key;imageMode=key==='chl';menu()}
  const format=(n,dec=1)=>n.toLocaleString('es-CL',{maximumFractionDigits:dec});
  function style(){return settings[id]??={blend:'normal',range:[layer().min,marine()?Math.round(layer().max*1.94384)/1.94384:layer().max],colors:['#244c7d','#b74862'],alpha:id.startsWith('wind')?[15,55]:[65,78]}}
  function hue(rgb){const [r,g,b]=rgb.map(v=>v/255),hi=Math.max(r,g,b),lo=Math.min(r,g,b),c=hi-lo,l=(hi+lo)/2;
@@ -179,10 +214,11 @@ THE SOFTWARE.
   const ticket=++revision,t=timeline()[index],l=layer();anchor=t.stamps[0];slider.value=index;
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
-  if(pane.hidden)return;showFloats(t.stamps.at(-1));
+  if(pane.hidden)return;showFloats(t.stamps.at(-1),smooth);
   const images=id==='chl'&&period==='Imágenes',frames=images&&mosaic?timeline().slice(Math.max(0,index-9),index+1).map(row=>row.key):t.stamps;
+  const bioDates=[...new Set(t.stamps.map(stamp=>stamp.slice(0,10)))];
   const detailName=images?null:detailKey(l,t.stamps);
-  const [field,outer,air,overlays,detail]=await Promise.all([images?average('chlNative',frames,mosaic):average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].filter(k=>k!==id).map(async k=>[k,await average(k,t.stamps),detailKey(layers[k],t.stamps)?await average(detailKey(layers[k],t.stamps),t.stamps):null])),detailName?average(detailName,t.stamps):null]);
+  const [field,outer,air,overlays,detail]=await Promise.all([images?average('chlNative',frames,mosaic):average(l.key,t.stamps),marine()?average('outer',t.stamps):null,airAt(t.stamps),Promise.all([...checked].filter(k=>k!==id).map(async k=>[k,await average(k,bioDates),detailKey(layers[k],bioDates)?await average(detailKey(layers[k],bioDates),bioDates):null])),detailName?average(detailName,t.stamps):null]);
   if(ticket!==revision||pane.hidden)return;
   const was=current;current={id,field,outer,air,overlays,detail,layer:l};previous=smooth&&was?.id===id&&was.field&&field?was:null;
   pressureToggle.title=air?'Isobaras de presión · hPa':'Isobaras de presión · sin datos';
@@ -192,7 +228,12 @@ THE SOFTWARE.
   const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
   q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(images?(mosaic?'Último dato válido · ':'Imagen diaria · '):'')+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level','wave'].includes(id)?' · Costa de Otway–Skyring ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
-  size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').textContent+=' · Punteado: muestra marina más cercana';if(current.estimated.includes(1))q('[data-source]').textContent+=' · Tono tenue: estimación por agua conectada';drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
+  const guide={mixed:'La escala indica hasta qué profundidad llega la capa superficial de densidad relativamente uniforme. Un valor de 60 m indica una capa más profunda que uno de 10 m.',salt:'La escala indica salinidad superficial. Un valor de 30 PSU corresponde a agua más dulce que uno de 34 PSU.',o2:'La escala indica oxígeno disuelto en superficie. Para convertir de mmol/m³ a mg/L multiplica por 0,032.'};
+  if(guide[id]){
+   const note=q('[data-source]');note.append(' · '+guide[id]);
+   if(id==='mixed'){const link=document.createElement('a');link.href='https://svs.gsfc.nasa.gov/20227/';link.target='_blank';link.rel='noopener';link.textContent='Ver animación de NASA';note.append(' ',link)}
+  }
+  size();current.texture=texture(current);if(current.estimated.includes(2))q('[data-source]').append(' · Punteado: muestra marina más cercana');if(current.estimated.includes(1))q('[data-source]').append(' · Tono tenue: estimación por agua conectada');drawSymbols();started=performance.now();fraction=previous?0:1;if(!previous)flow.getContext('2d').clearRect(0,0,flow.width,flow.height);paint(fraction);
  }
  let water=null,viewKey='';
  function size(){
@@ -474,6 +515,7 @@ THE SOFTWARE.
   if(drawPressure)contours(t);
  }
  function animate(now){
+  moveFloats(now);
   if(pane.hidden)return;anim=requestAnimationFrame(animate);if(!current||now-lastFrame<32)return;
   const dt=Math.min(65,now-lastFrame)/1000;lastFrame=now;
   if(previous){const f=Math.max(0,Math.min(1,(now-started)/duration));fraction=f;
@@ -577,7 +619,7 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  argoOn=false;floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  argoOn=false;showFloats();floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
   if(open){
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
    window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
@@ -588,7 +630,7 @@ THE SOFTWARE.
  q('[data-min]').onclick=()=>context.minimize('clima');
  q('[data-close]').onclick=()=>{stop();closeEditor();context.close('clima');tool.setAttribute('aria-expanded','false')};
  q('[data-clear]').onclick=()=>{
-  argoOn=false;floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
+  argoOn=false;showFloats();floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
   id='wind';period=bundle.publicView?'6 h':'Día';mode=bundle.publicView?'Actual':'Histórico';anchor=bundle.publicView?sets.air.analysisEnd:'2026-01-01';moving=true;motionLabel();showPressure=true;pressureToggle.setAttribute('aria-pressed','true');menu()
  };
  d.addEventListener('pointerenter',()=>d.classList.remove('context-concealed-v39'));
