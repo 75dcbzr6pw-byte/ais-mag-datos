@@ -24,13 +24,15 @@ THE SOFTWARE.
  */
  const {sets,layers,coast}=bundle;
  const d=document.createElement('section');d.id='climaVista';d.className='workspace-panel-v39';d.hidden=true;
- d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div data-modes class="clima-modes"></div><div class="clima-bar"><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16"><path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267" /></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div></div><div data-marks></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
+ d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div data-modes class="clima-modes"></div><div class="clima-bar"><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16"><path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267" /></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div></div><div data-marks></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><label>Modo de fusión <select data-blend><option value="normal">Normal</option><option value="multiply">Multiplicar</option><option value="screen">Trama</option><option value="overlay">Superponer</option><option value="darken">Oscurecer</option><option value="lighten">Aclarar</option><option value="soft-light">Luz suave</option><option value="hard-light">Luz fuerte</option><option value="color-dodge">Sobreexponer color</option><option value="color-burn">Subexponer color</option><option value="difference">Diferencia</option><option value="exclusion">Exclusión</option><option value="hue">Tono</option><option value="saturation">Saturación</option><option value="color">Color</option><option value="luminosity">Luminosidad</option></select></label><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
  const q=s=>d.querySelector(s),slider=q('.clima-time input'),play=q('[data-play]');
  const bio={no3:'#df7452',po4:'#9164d9',si:'#279aaa',chl:'#58a442'},checked=new Set();
  const pane=map.createPane('climaAmbiental');pane.style.cssText='z-index:350;pointer-events:none';pane.hidden=true;
  const canvas=()=>document.createElement('canvas');
  const base=canvas(),flow=canvas(),pressure=canvas(),symbols=canvas();
- for(const c of [base,flow,pressure,symbols]){c.style.position='absolute';pane.append(c)}
+ const colorPane=map.createPane('climaColor');colorPane.style.cssText='z-index:349;pointer-events:none';colorPane.hidden=true;
+ base.style.position='absolute';colorPane.append(base);
+ for(const c of [flow,pressure,symbols]){c.style.position='absolute';pane.append(c)}
  const seaBits=bytes(coast.bits);
  function bytes(str){return Uint8Array.fromBase64?Uint8Array.fromBase64(str):Uint8Array.from(atob(str),s=>s.charCodeAt(0))}
  function isSea(lon,lat){if(!Number.isFinite(lon+lat))return false;const x=Math.round((lon-coast.west)/coast.step),y=Math.round((coast.north-lat)/coast.step);
@@ -68,7 +70,7 @@ THE SOFTWARE.
  }
  function select(key){stop();closeEditor();id=key;menu()}
  const format=(n,dec=1)=>n.toLocaleString('es-CL',{maximumFractionDigits:dec});
- function style(){return settings[id]??={range:[layer().min,marine()?Math.round(layer().max*1.94384)/1.94384:layer().max],colors:['#244c7d','#b74862'],alpha:id.startsWith('wind')?[15,55]:[65,78]}}
+ function style(){return settings[id]??={blend:'normal',range:[layer().min,marine()?Math.round(layer().max*1.94384)/1.94384:layer().max],colors:['#244c7d','#b74862'],alpha:id.startsWith('wind')?[15,55]:[65,78]}}
  function hue(rgb){const [r,g,b]=rgb.map(v=>v/255),hi=Math.max(r,g,b),lo=Math.min(r,g,b),c=hi-lo,l=(hi+lo)/2;
   const h=!c?0:hi===r?(g-b)/c:hi===g?(b-r)/c+2:(r-g)/c+4;
   return [(h*60+360)%360,c?c/(1-Math.abs(2*l-1)):0,l]}
@@ -79,7 +81,7 @@ THE SOFTWARE.
    const ch=(1-Math.abs(2*l-1))*s,x=ch*(1-Math.abs((h/60)%2-1)),m=l-ch/2;
    const v=[[ch,x,0],[x,ch,0],[0,ch,x],[0,x,ch],[x,0,ch],[ch,0,x]][Math.floor(h/60)%6];return [...v.map(n=>Math.round((n+m)*255)),Math.round((st.alpha[0]+(st.alpha[1]-st.alpha[0])*t)*2.55)]});
  }
- function legend(){const l=layer(),p=palette(),unit=marine()?'kt':l.unit,f=marine()?1.94384:1;
+ function legend(){colorPane.style.mixBlendMode=style().blend;const l=layer(),p=palette(),unit=marine()?'kt':l.unit,f=marine()?1.94384:1;
   const [lo,hi]=style().range,lower=Math.round(l.min*f),upper=Math.max(lower+1,Math.round(l.max*f));
   const position=v=>100*(v*f-lower)/(upper-lower);
   const split=(position(lo)+position(hi))/2,bar=q('.scale');
@@ -101,10 +103,11 @@ THE SOFTWARE.
    if(previous?.id===id)previous.texture=texture(previous,true);paint(previous?fraction:1);
   })
  };
- for(const b of d.querySelectorAll('[data-end]'))b.onclick=()=>{stop();editing=+b.dataset.end;const st=style();q('[data-editor]').hidden=false;q('[data-color]').value=st.colors[editing];q('[data-opacity]').value=st.alpha[editing];q('[data-alpha]').value=st.alpha[editing]+' %';q('[data-color]').focus()};
+ for(const b of d.querySelectorAll('[data-end]'))b.onclick=()=>{stop();editing=+b.dataset.end;const st=style();q('[data-editor]').hidden=false;q('[data-blend]').value=st.blend;q('[data-color]').value=st.colors[editing];q('[data-opacity]').value=st.alpha[editing];q('[data-alpha]').value=st.alpha[editing]+' %';q('[data-color]').focus()};
  q('[data-done]').onclick=closeEditor;d.addEventListener('keydown',e=>{if(e.key==='Escape'&&editing!==null)closeEditor()});
  let recolorFrame=0;
  function applyColor(){const st=style();st.colors[editing]=q('[data-color]').value;st.alpha[editing]=+q('[data-opacity]').value;q('[data-alpha]').value=st.alpha[editing]+' %';legend();cancelAnimationFrame(recolorFrame);recolorFrame=requestAnimationFrame(()=>{if(current&&!pane.hidden){previous=null;current.texture=texture(current,true);paint(1)}})}
+ q('[data-blend]').onchange=e=>{style().blend=e.target.value;colorPane.style.mixBlendMode=style().blend};
  q('[data-color]').oninput=applyColor;q('[data-opacity]').oninput=applyColor;
  function chart(){
   const line=timeline(),l=layer(),c=q('[data-chart]'),ctx=c.getContext('2d'),w=c.width,h=c.height;
@@ -375,7 +378,7 @@ THE SOFTWARE.
   if(previous){const f=Math.min(1,(now-started)/duration);fraction=f;
    if(now-lastPaint>90||f===1){paint(fraction);lastPaint=now}if(f===1)previous=null}
   if(editing!==null||!moving||!current.layer.vector)return;
-  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
+  const c=flow.getContext('2d'),w=flow.width,h=flow.height;c.globalCompositeOperation='destination-in';c.fillStyle=current.id==='wave'?'rgba(0,0,0,0)':current.id.startsWith('wind')?'rgba(0,0,0,.965)':'rgba(0,0,0,.94)';c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
   c.strokeStyle='#fff';c.lineWidth=.85;c.beginPath();
   for(const p of particles){const x=p[0],y=p[1],k=(Math.floor(y/4)*current.width+Math.floor(x/4))*2;
    let u=current.velocity[k],v=current.velocity[k+1];
@@ -413,7 +416,7 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  stop();closeEditor();pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
   if(open){
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
    window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
