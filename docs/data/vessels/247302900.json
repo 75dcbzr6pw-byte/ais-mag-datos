@@ -1,0 +1,1 @@
+{"schema":"ais-mag-vessel-v2","mmsi":"247302900","nombre":"AIDASOL","puntos":[[1795423720,-68.199927,-54.829817,13.9,288.3],[1795425255,-68.285177,-54.813085,0.7,184.9],[1795425431,-68.286592,-54.813437,1.7,268.4]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":3,"muestra_min":15,"corte_utc":"2026-11-23T15:07:24Z","fecha_minima_utc":"2026-10-24T15:07:24Z"}
