@@ -22,7 +22,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
- const {sets,layers,coast}=bundle;
+ const {layers,coast}=bundle;
+ const activeSets=()=>mode==='Actual'&&bundle.actualSets?bundle.actualSets:bundle.sets;
  const d=document.createElement('section');d.id='climaVista';d.className='workspace-panel-v39';d.hidden=true;
  d.innerHTML='<header class="workspace-head-v39"><h2>Clima</h2><div class="context-actions-v39"><button data-clear title="Restablecer parámetros de Clima" aria-label="Restablecer parámetros de Clima"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button><button data-min title="Minimizar hasta pasar el cursor" aria-label="Minimizar Clima">−</button><button data-close title="Cerrar menú de Clima" aria-label="Cerrar Clima">×</button></div></header><div class="clima-body"><div class="clima-bar"><div data-modes class="clima-modes"></div><div class="fleet-scale-buttons-v39" data-period></div><div class="clima-transport"><button data-prev></button><button data-play aria-label="Reproducir" title="Reproducir">▶</button><button data-next></button></div><div class="clima-options"><button class="motion"></button><button class="isobars" aria-pressed="true" aria-label="Isobaras de presión" title="Isobaras de presión"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2.2 3.1a.55.55 0 0 1 .55-.55h10.5a.55.55 0 0 1 0 1.1h-.55l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.7l-.85 1.7-.85-1.7h-.55a.55.55 0 0 1-.55-.55z"/></svg></button></div></div><div class="clima-time"><input type="range" min="0" step="1" value="0" aria-label="Línea de tiempo de Clima 2026"><div class="months"><span>Ene</span><span>Abr</span><span>Jul</span><span>Oct</span><span>Dic</span></div></div><div class="clima-readout"><output></output><span data-caption></span></div><figure><canvas data-chart width="340" height="90"></canvas></figure><div class="clima-fields" data-fields></div><div class="clima-legend"><div class="scale"><button data-end="0" title="Editar extremo inferior" aria-label="Editar extremo inferior"></button><button data-end="1" title="Editar extremo superior" aria-label="Editar extremo superior"></button><div class="clima-limits"><label>Mín. <input type="range" data-limit="0" aria-label="Mínimo de la escala"></label><label>Máx. <input type="range" data-limit="1" aria-label="Máximo de la escala"></label></div></div><div data-marks></div><div data-editor hidden><label>Color <input data-color type="color"></label><label>Opacidad <input data-opacity type="range" min="0" max="100"></label><output data-alpha></output><label>Modo de fusión <select data-blend><option value="normal">Normal</option><option value="multiply">Multiplicar</option><option value="screen">Trama</option><option value="overlay">Superponer</option><option value="darken">Oscurecer</option><option value="lighten">Aclarar</option><option value="soft-light">Luz suave</option><option value="hard-light">Luz fuerte</option><option value="color-dodge">Sobreexponer color</option><option value="color-burn">Subexponer color</option><option value="difference">Diferencia</option><option value="exclusion">Exclusión</option><option value="hue">Tono</option><option value="saturation">Saturación</option><option value="color">Color</option><option value="luminosity">Luminosidad</option></select></label><button data-done>Listo</button></div></div><small data-source></small></div>';document.body.append(d);
  const q=s=>d.querySelector(s),slider=q('.clima-time input'),play=q('[data-play]');
@@ -39,7 +40,7 @@ THE SOFTWARE.
   if(x<0||x>=coast.width||y<0||y>=coast.height)return false;
   const bit=y*coast.width+x;return !(seaBits[bit>>3]&(1<<(bit&7)))}
  let id='wind',mode='Histórico',period='Día',index=0,anchor=sessionStorage.getItem('clima-fecha')||new Date().toISOString().slice(0,13),revision=0,playing=false,timer,scrubTimer,run=0,anim=0;
- if(bundle.publicView){mode='Actual';period='6 h'}
+ if(bundle.publicView||bundle.actualSets){mode='Actual';period='6 h'}
  let current=null,previous=null,started=0,fraction=1,moving=true,showPressure=true,editing=null;
  let lons=[],lats=[],particles=[],lastFrame=0,lastPaint=0;
  let hold=4200,duration=hold;const speed=document.createElement("select");speed.setAttribute("aria-label","Velocidad de reproducción");for(const n of [1,2,3,5])speed.add(new Option(n+"×",n));q(".clima-transport").append(speed);speed.onchange=()=>{hold=duration=4200/Number(speed.value)};const settings={},cache=new Map();
@@ -327,11 +328,13 @@ THE SOFTWARE.
  }
  async function decoded(raw){const stream=new Blob([bytes(raw)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return new Int16Array(await new Response(stream).arrayBuffer())}
  async function average(key,stamps,latest=false){
-  if(key==='air'&&mode==='Histórico')stamps=stamps.filter(t=>t.slice(0,10)<=sets.air.analysisEnd);
+  const sets=activeSets(),view=mode;
+  if(view==='Actual'&&bundle.loadActualDays)await bundle.loadActualDays(stamps);
+  if(key==='air'&&view==='Histórico')stamps=stamps.filter(t=>t.slice(0,10)<=sets.air.analysisEnd);
   if(bundle.loadDays)await bundle.loadDays(stamps);
   const set=sets[key],n=set.x.length*set.y.length,ids=stamps.filter(t=>(t.includes('T')?set.recent:set.days)?.[t]);
   if(!ids.length)return null;
-  const token=[latest,key,ids[0],ids.at(-1),ids.length].join('|');if(cache.has(token))return cache.get(token);
+  const token=[view,latest,key,ids[0],ids.at(-1),ids.length].join('|');if(cache.has(token))return cache.get(token);
   const promise=(async()=>{let sums,count;
    for(const t of ids){
     const a=await decoded((t.includes('T')?set.recent:set.days)[t]);
@@ -352,7 +355,7 @@ THE SOFTWARE.
   return {...a,a:a.a.map((v,i)=>v+(b.a[i]-v)*w)};
  }
  async function update(smooth){
-  const ticket=++revision,t=timeline()[index],l=layer();slider.value=index;
+  const sets=activeSets(),ticket=++revision,t=timeline()[index],l=layer();slider.value=index;
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
   if(pane.hidden)return;showFloats(t.stamps.at(-1),smooth);drawMet(t.stamps.at(-1));drawRivers(t.stamps.at(-1));
@@ -369,6 +372,10 @@ THE SOFTWARE.
   const source=l.key==='air'?weatherSource+(period.endsWith(' h')?' · lectura UTC':' · 4 lecturas UTC por día'):l.source;
   pressureToggle.title=air?'Isobaras de presión · '+weatherSource+' · hPa':'Isobaras de presión · sin datos';
   q('[data-source]').textContent=(l.key==='inner'&&period.endsWith(' h')?'Copernicus Marine · SMOC · lectura horaria':source)+' · '+(images?(mosaic?'Último dato válido · ':'Imagen diaria · '):'')+(field?.count||0)+(period.endsWith(' h')?' lectura':' días con cartografía')+(air?'':' · Sin presión para este período')+(['tide','total','level','wave'].includes(id)?' · Costa de Otway–Skyring ajustada con ESA WorldCover 2021 (CC BY 4.0).':'');
+  if(bundle.origin){
+   const offline=mode==='Histórico'||bundle.origin==='Copia portable'||t.stamps.some(stamp=>bundle.fallbackDays?.has(stamp.slice(0,10)));
+   q('[data-source]').append(' · '+(offline?'Archivo portable':'Publicado en GitHub'));
+  }
   const guide={mixed:'La escala indica hasta qué profundidad llega la capa superficial de densidad relativamente uniforme. Un valor de 60 m indica una capa más profunda que uno de 10 m.',salt:'La escala indica salinidad superficial. Un valor de 30 PSU corresponde a agua más dulce que uno de 34 PSU.',o2:'La escala indica oxígeno disuelto en superficie. Para convertir de mmol/m³ a mg/L multiplica por 0,032.'};
   if(guide[id]){
    const note=q('[data-source]');note.append(' · '+guide[id]);
@@ -773,7 +780,7 @@ THE SOFTWARE.
  q('[data-close]').onclick=()=>{stop();closeEditor();context.close('clima');tool.setAttribute('aria-expanded','false')};
  q('[data-clear]').onclick=()=>{
   riverOn=false;drawRivers();metOn=false;drawMet();argoOn=false;showFloats();floats.remove();stop();closeEditor();checked.clear();Object.keys(settings).forEach(k=>delete settings[k]);
-  argoOn=metOn=true;id='wind';period=bundle.publicView?'6 h':'Día';mode=bundle.publicView?'Actual':'Histórico';moving=true;motionLabel();showPressure=true;pressureToggle.setAttribute('aria-pressed','true');menu()
+  argoOn=metOn=true;id='wind';period=(bundle.publicView||bundle.actualSets)?'6 h':'Día';mode=(bundle.publicView||bundle.actualSets)?'Actual':'Histórico';moving=true;motionLabel();showPressure=true;pressureToggle.setAttribute('aria-pressed','true');menu()
  };
  d.addEventListener('pointerenter',()=>d.classList.remove('context-concealed-v39'));
  d.addEventListener('pointerleave',()=>{if(d.classList.contains('context-peek-v39'))d.classList.add('context-concealed-v39')});
