@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"367458840","nombre":"OSPREY","puntos":[[1795256964,-79.975745,-86.083783,0.0,null]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-25T03:02:17Z","fecha_minima_utc":"2026-10-26T03:02:17Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"367458840","nombre":"OSPREY","puntos":[[1795256964,-79.975745,-86.083783,0.0,null]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-25T15:07:19Z","fecha_minima_utc":"2026-10-26T15:07:19Z"}
