@@ -312,19 +312,19 @@ THE SOFTWARE.
  function applyColor(){const st=style();st.colors[editing]=q('[data-color]').value;st.alpha[editing]=+q('[data-opacity]').value;q('[data-alpha]').value=st.alpha[editing]+' %';legend();cancelAnimationFrame(recolorFrame);recolorFrame=requestAnimationFrame(()=>{if(current&&!pane.hidden){previous=null;current.texture=texture(current,true);paint(1)}})}
  q('[data-blend]').onchange=e=>{style().blend=e.target.value;colorPane.style.mixBlendMode=style().blend};
  q('[data-color]').oninput=applyColor;q('[data-opacity]').oninput=applyColor;
- function chart(){
-  const line=timeline(),l=layer(),c=q('[data-chart]'),ctx=c.getContext('2d'),w=c.width,h=c.height;
+ function chart(c=q('[data-chart]'),line=timeline(),indexAt=index,chartMode=mode,marks=q('.months')){
+  const l=layer(),ctx=c.getContext('2d'),w=c.width,h=c.height;
   c.title=l.referenceTitle;c.setAttribute('aria-label',l.title+' · '+l.referenceTitle);ctx.clearRect(0,0,w,h);
   const values=line.flatMap(t=>[t.value,t.ref]).filter(Number.isFinite);if(!values.length)return;
   const lo=Math.min(...values),hi=Math.max(...values),x=i=>34+i*(w-46)/Math.max(1,line.length-1),y=v=>8+(hi-v)/(hi-lo||1)*(h-26);
-  ctx.font='10px Arial';ctx.fillStyle=getComputedStyle(d).color;ctx.fillText(format(hi),1,13);ctx.fillText(format(lo),1,h-13);
+  ctx.font='10px Arial';ctx.fillStyle=getComputedStyle(c).color;ctx.fillText(format(hi),1,13);ctx.fillText(format(lo),1,h-13);
   for(const key of ['ref','value']){ctx.strokeStyle=key==='ref'?'#899599':'#219eb0';ctx.setLineDash(key==='ref'?[4,3]:[]);ctx.beginPath();let first=true;
    line.forEach((t,i)=>{if(t[key]==null){first=true;return}if(first)ctx.moveTo(x(i),y(t[key]));else ctx.lineTo(x(i),y(t[key]));first=false});ctx.stroke()}
-  ctx.setLineDash([]);ctx.strokeStyle='#be824c';ctx.beginPath();ctx.moveTo(x(index),2);ctx.lineTo(x(index),h-12);ctx.stroke();
-  if(line[index].value!=null){ctx.fillStyle='#219eb0';ctx.beginPath();ctx.arc(x(index),y(line[index].value),3,0,Math.PI*2);ctx.fill()}
-  ctx.fillStyle=getComputedStyle(d).color;const marks=q('.months');marks.replaceChildren();
+  ctx.setLineDash([]);ctx.strokeStyle='#be824c';ctx.beginPath();ctx.moveTo(x(indexAt),2);ctx.lineTo(x(indexAt),h-12);ctx.stroke();
+  if(line[indexAt].value!=null){ctx.fillStyle='#219eb0';ctx.beginPath();ctx.arc(x(indexAt),y(line[indexAt].value),3,0,Math.PI*2);ctx.fill()}
+  ctx.fillStyle=getComputedStyle(c).color;marks?.replaceChildren();
   for(const i of new Set([0,.25,.5,.75,1].map(f=>Math.round(f*(line.length-1))))){const stamp=line[i].stamps[0],date=new Date(stamp.slice(0,10)+'T12:00Z');
-   const text=date.toLocaleDateString('es-CL',mode==='Histórico'?{month:'short'}:{month:'short',day:'numeric'});ctx.fillText(text,Math.min(w-28,x(i)),h-1);const s=document.createElement('span');s.textContent=text;marks.append(s)}
+   const text=date.toLocaleDateString('es-CL',chartMode==='Histórico'?{month:'short'}:{month:'short',day:'numeric'});ctx.fillText(text,Math.min(w-28,x(i)),h-1);const s=document.createElement('span');s.textContent=text;marks?.append(s)}
  }
  async function decoded(raw){const stream=new Blob([bytes(raw)]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return new Int16Array(await new Response(stream).arrayBuffer())}
  async function average(key,stamps,latest=false){
@@ -354,8 +354,8 @@ THE SOFTWARE.
   const [a,b]=fields,w=(time-lower)/step;
   return {...a,a:a.a.map((v,i)=>v+(b.a[i]-v)*w)};
  }
- async function update(smooth){
-  const sets=activeSets(),ticket=++revision,t=timeline()[index],l=layer();slider.value=index;
+ async function update(smooth,linkedRow){
+  const sets=activeSets(),ticket=++revision,t=linkedRow||timeline()[index],l=layer();slider.value=index;
   const stamp=(period==='Semana'?'Semana del ':'')+(period==='Mes'?t.stamps[0]:t.key).replace(/^(\d{4})-(\d{2})-(\d{2})/,'$3-$2-$1').replace('T',' ')+(period.endsWith(' h')?':00 UTC':'');
   q('.clima-readout output').textContent=stamp+(l.key==='air'&&mode==='Actual'&&t.stamps.at(-1).slice(0,10)>sets.air.analysisEnd?' · Pronóstico':'');slider.setAttribute('aria-valuetext',stamp);q('[data-caption]').textContent=l.title+' · '+(t.value==null?'Sin datos':format(t.value,2)+' '+l.unit);chart();
   if(pane.hidden)return;showFloats(t.stamps.at(-1),smooth);drawMet(t.stamps.at(-1));drawRivers(t.stamps.at(-1));
@@ -767,13 +767,56 @@ THE SOFTWARE.
  const tool=slot.firstChild;
  function reveal(){context.show('clima');tool.setAttribute('aria-expanded','true')}
  function toggle(open){
-  riverOn=false;drawRivers();metOn=false;drawMet();argoOn=false;showFloats();floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  const keepRiver=riverOn;riverOn=false;drawRivers();metOn=false;drawMet();argoOn=false;showFloats();floats.remove();stop();closeEditor();colorPane.hidden=pane.hidden=!open;tool.setAttribute('aria-pressed',String(open));cancelAnimationFrame(anim);
+  riverOn=keepRiver;
   if(open){
    argoOn=metOn=true;
    if(window.__FLOTA_V39?.state.active)window.__FLOTA_V39.deactivate();
-   window.__V39_EXPLICIT_VIEW='clima';reveal();id='wind';checked.clear();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
+   window.__V39_EXPLICIT_VIEW='clima';reveal();map.on('moveend resize',redraw);menu();anim=requestAnimationFrame(animate)
   }else{context.close('clima');tool.setAttribute('aria-expanded','false');revision++;current=null;previous=null;flow.getContext('2d').clearRect(0,0,flow.width,flow.height);map.off('moveend resize',redraw)}
  }
+ let savedView=null,lastLinked='';
+ function stopLinked(){
+  if(!savedView)return;
+  toggle(false);({mode,period,index,anchor}=savedView);savedView=null;lastLinked='';
+ }
+ window.linkedClimateV39={stop:stopLinked,fanChart(canvas,caption,w,fanMode,scale){
+  const day=w.to||w.end,span={day:'Día',week:'Semana',month:'Mes'}[scale];
+  const views=layer().views,preferred=fanMode==='history'?'Histórico':'Actual';
+  for(const view of [preferred,preferred==='Actual'?'Histórico':'Actual']){
+   const line=views[view]?.[span]||[];
+   const selected=line.findIndex(row=>row.stamps[0].slice(0,10)<=day&&row.stamps.at(-1).slice(0,10)>=day);
+   if(selected<0)continue;
+   chart(canvas,line,selected,view,null);
+   const row=line[selected],date=s=>s.slice(0,10).split('-').reverse().join('-'),from=date(row.stamps[0]),to=date(row.stamps.at(-1));
+   caption.textContent=layer().title+' · '+(row.value==null?'Sin datos':format(row.value,2)+' '+layer().unit)+' · '+from+(from===to?'':' – '+to);
+   return;
+  }
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);caption.textContent=layer().title+' · Sin datos para este período';
+ },async follow(start,end,hourly){
+  if(!savedView){savedView={mode,period,index,anchor};stop();closeEditor();map.on('moveend resize',redraw)}
+  const views=layer().views,day=end.slice(0,10);
+  let view='Histórico',scale='Día',rows=[];
+  const detailed=Object.keys(views.Actual||{}).find(k=>k.endsWith(' h'));
+  if(hourly&&detailed){
+   const candidates=views.Actual[detailed].filter(r=>r.value!=null&&r.stamps.some(s=>s.startsWith(day)&&s<=end));
+   if(candidates.length){view='Actual';scale=detailed;rows=[candidates.at(-1)]}
+  }
+  if(!rows.length){
+   for(const v of ['Histórico','Actual']){
+    const dates=views[v]?.Día||[];
+    rows=dates.filter(r=>r.key>=start.slice(0,10)&&r.key<=day&&r.value!=null);
+    if(rows.length){view=v;break}
+   }
+  }
+  const key=[id,view,scale,rows[0]?.key,rows.at(-1)?.key].join('|');
+  if(key===lastLinked)return;lastLinked=key;
+  mode=view;period=scale;index=Math.max(0,timeline().indexOf(rows.at(-1)));
+  revision++;if(!rows.length){colorPane.hidden=pane.hidden=true;cancelAnimationFrame(anim);const keep=riverOn;riverOn=false;drawRivers();riverOn=keep;return}
+  if(pane.hidden){colorPane.hidden=pane.hidden=false;cancelAnimationFrame(anim);anim=requestAnimationFrame(animate)}
+  const row={...rows.at(-1),stamps:rows.flatMap(r=>r.stamps)};
+  await update(true,row);
+ }};
  slot.parentElement.addEventListener('click',e=>{const other=e.target.closest('button.workspace-icon-v39');if(other&&other!==tool&&!pane.hidden)toggle(false)},true);
  tool.onclick=()=>{if(pane.hidden)toggle(true);else if(d.hidden||d.classList.contains('context-peek-v39'))reveal();else toggle(false)};
  q('[data-min]').onclick=()=>context.minimize('clima');
