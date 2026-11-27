@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"235093618","nombre":"EVER LASTING","puntos":[[1793709595,-70.352523,-71.15156,11.4,98.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-26T15:06:49Z","fecha_minima_utc":"2026-10-27T15:06:49Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"235093618","nombre":"EVER LASTING","puntos":[[1793709595,-70.352523,-71.15156,11.4,98.0]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-27T03:02:08Z","fecha_minima_utc":"2026-10-28T03:02:08Z"}

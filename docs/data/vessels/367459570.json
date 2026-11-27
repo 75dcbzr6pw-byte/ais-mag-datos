@@ -1,1 +1,1 @@
-{"schema":"ais-mag-vessel-v2","mmsi":"367459570","nombre":"CORAL COAST","puntos":[[1795689900,-75.588595,-71.089252,16.0,294.7]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-26T15:06:49Z","fecha_minima_utc":"2026-10-27T15:06:49Z"}
+{"schema":"ais-mag-vessel-v2","mmsi":"367459570","nombre":"CORAL COAST","puntos":[[1795689900,-75.588595,-71.089252,16.0,294.7]],"campos":["timestamp_unix","lon","lat","sog","cog"],"cantidad":1,"muestra_min":15,"corte_utc":"2026-11-27T03:02:08Z","fecha_minima_utc":"2026-10-28T03:02:08Z"}
